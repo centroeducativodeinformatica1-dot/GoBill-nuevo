@@ -128,7 +128,7 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 //  CONCEPTOS DINÁMICOS
 // ═══════════════════════════════════════════════════════════
 
-let conceptos = [{ desc: "", monto: "" }];
+let conceptos = [{ desc: "", lista: "", descuento: "" }];
 
 function renderConceptos() {
   const list = document.getElementById("conceptos-list");
@@ -137,10 +137,12 @@ function renderConceptos() {
     const row = document.createElement("div");
     row.className = "concepto-row";
     row.innerHTML = `
-      <input type="text" placeholder="Descripción" value="${c.desc}"
-        data-i="${i}" data-k="desc" class="desc-input" />
-      <input type="number" placeholder="$ 0.00" value="${c.monto}"
-        data-i="${i}" data-k="monto" class="monto" />
+      <input type="text"   placeholder="Ej: Internet + Cable" value="${c.desc}"
+        data-i="${i}" data-k="desc" />
+      <input type="number" placeholder="$ 0" value="${c.lista}"
+        data-i="${i}" data-k="lista" class="monto" />
+      <input type="number" placeholder="$ 0" value="${c.descuento}"
+        data-i="${i}" data-k="descuento" class="monto descuento-col" />
       <button class="btn-remove-concepto" data-i="${i}" title="Eliminar">✕</button>
     `;
     list.appendChild(row);
@@ -162,7 +164,7 @@ function renderConceptos() {
 }
 
 document.getElementById("btn-add-concepto").addEventListener("click", () => {
-  conceptos.push({ desc: "", monto: "" });
+  conceptos.push({ desc: "", lista: "", descuento: "" });
   renderConceptos();
 });
 
@@ -177,15 +179,15 @@ document.getElementById("f-fecha").value = hoy;
 // ═══════════════════════════════════════════════════════════
 
 function calcularFactura(data) {
-  const subtotal = conceptos.reduce((s, c) => s + (parseFloat(c.monto) || 0), 0);
-  const descuento = subtotal * ((parseFloat(data.descuento) || 0) / 100);
-  const credito   = parseFloat(data.credito) || 0;
-  const mora      = parseFloat(data.mora) || 0;
-  const ivaRate   = (parseFloat(data.iva) != null ? parseFloat(data.iva) : 21) / 100;
-  const baseIva   = subtotal - descuento;
-  const ivaAmt    = baseIva * ivaRate;
-  const total     = baseIva + ivaAmt + mora - credito;
-  return { subtotal, descuento, credito, mora, ivaAmt, ivaRate, total };
+  const precioLista     = conceptos.reduce((s, c) => s + (parseFloat(c.lista)    || 0), 0);
+  const totalDescuentos = conceptos.reduce((s, c) => s + (parseFloat(c.descuento)|| 0), 0);
+  const subtotal        = precioLista - totalDescuentos;
+  const credito         = parseFloat(data.credito) || 0;
+  const mora            = parseFloat(data.mora)    || 0;
+  const ivaRate         = (parseFloat(data.iva) != null ? parseFloat(data.iva) : 21) / 100;
+  const ivaAmt          = subtotal * ivaRate;
+  const total           = subtotal + ivaAmt + mora - credito;
+  return { precioLista, totalDescuentos, subtotal, credito, mora, ivaAmt, ivaRate, total };
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -205,7 +207,6 @@ document.getElementById("btn-generar").addEventListener("click", () => {
     periodo:    g("f-periodo"),
     nrofactura: g("f-nrofactura"),
     vencimiento:g("f-vencimiento"),
-    descuento:  g("f-descuento"),
     credito:    g("f-credito"),
     mora:       g("f-mora"),
     iva:        g("f-iva") || "21",
@@ -216,8 +217,18 @@ document.getElementById("btn-generar").addEventListener("click", () => {
   const { subtotal, descuento, credito, mora, ivaAmt, ivaRate, total } = calcularFactura(data);
 
   const filasConceptos = conceptos
-    .filter(c => c.desc || c.monto)
-    .map(c => `<tr><td>${c.desc || "—"}</td><td>${ARS(parseFloat(c.monto)||0)}</td></tr>`)
+    .filter(c => c.desc || c.lista)
+    .map(c => {
+      const lista = parseFloat(c.lista) || 0;
+      const desc  = parseFloat(c.descuento) || 0;
+      const neto  = lista - desc;
+      return `<tr>
+        <td>${c.desc || "—"}</td>
+        <td class="lista-col">${ARS(lista)}</td>
+        <td class="desc-col">${desc > 0 ? "−"+ARS(desc) : "—"}</td>
+        <td>${ARS(neto)}</td>
+      </tr>`;
+    })
     .join("");
 
   const html = `
@@ -250,7 +261,7 @@ document.getElementById("btn-generar").addEventListener("click", () => {
 
     <table class="inv-table">
       <thead>
-        <tr><th>Concepto</th><th>Importe</th></tr>
+        <tr><th>Concepto</th><th>Precio lista</th><th>Descuento</th><th>Subtotal</th></tr>
       </thead>
       <tbody>
         ${filasConceptos || "<tr><td colspan='2'>Sin conceptos</td></tr>"}
@@ -259,12 +270,15 @@ document.getElementById("btn-generar").addEventListener("click", () => {
 
     <div class="inv-totals">
       <div class="inv-total-row">
+        <span>Precio de lista</span><span>${ARS(precioLista)}</span>
+      </div>
+      ${totalDescuentos > 0 ? `
+      <div class="inv-total-row green">
+        <span>Total descuentos</span><span>−${ARS(totalDescuentos)}</span>
+      </div>` : ""}
+      <div class="inv-total-row">
         <span>Subtotal</span><span>${ARS(subtotal)}</span>
       </div>
-      ${descuento > 0 ? `
-      <div class="inv-total-row">
-        <span>Descuento (${data.descuento}%)</span><span>−${ARS(descuento)}</span>
-      </div>` : ""}
       ${ivaRate > 0 ? `
       <div class="inv-total-row">
         <span>IVA (${data.iva}%)</span><span>${ARS(ivaAmt)}</span>
@@ -290,7 +304,7 @@ document.getElementById("btn-generar").addEventListener("click", () => {
   document.getElementById("invoice-render").innerHTML = html;
 
   // Guardar para mensajes
-  window._lastInvoice = { ...data, total, periodo: data.periodo };
+  window._lastInvoice = { ...data, total, totalDescuentos, precioLista, periodo: data.periodo };
 
   // Ir a tab Factura
   document.querySelector('[data-tab="invoice"]').click();
@@ -326,36 +340,146 @@ document.getElementById("btn-captura").addEventListener("click", async () => {
 });
 
 // ═══════════════════════════════════════════════════════════
-//  MENSAJES DE CIERRE (5 variantes)
+//  NIVELES PERSONAL PAY
 // ═══════════════════════════════════════════════════════════
 
-const SPEECH_TEMPLATES = {
-  formal: (d) =>
-    `Estimado/a ${d.nombre || "cliente"}, nos dirigimos a usted para informarle que su factura correspondiente al período ${d.periodo || "el período indicado"} ha sido procesada. El importe total a abonar es de ${ARS(d.total)}. Le solicitamos que realice el pago antes de la fecha de vencimiento indicada en el comprobante. Ante cualquier consulta, no dude en comunicarse con nosotros. Personal Argentina agradece su preferencia.`,
-
-  cordial: (d) =>
-    `Hola ${d.nombre ? d.nombre.split(" ")[0] : ""}! Te enviamos tu factura de Personal Argentina correspondiente a ${d.periodo || "este período"}. El total es de ${ARS(d.total)}. Si tenés alguna duda sobre los conceptos facturados, estamos disponibles para ayudarte. ¡Gracias por ser parte de Personal!`,
-
-  urgente: (d) =>
-    `⚠️ IMPORTANTE: ${d.nombre || "Cliente"}, su factura de Personal Argentina está próxima a vencer. Importe adeudado: ${ARS(d.total)} — período ${d.periodo || "indicado"}. Para evitar la suspensión del servicio, realice el pago a la brevedad. Podés abonar en cualquier Rapipago, Pago Fácil, cajero automático o desde la app de Personal.`,
-
-  amigable: (d) =>
-    `¡Hola ${d.nombre ? d.nombre.split(" ")[0] : ""}! 😊 Te mandamos tu factura de Personal del mes de ${d.periodo || "este mes"}. Son ${ARS(d.total)} en total. Podés pagarlo fácil por la app, en Rapipago o Pago Fácil. ¡Cualquier cosa avisame!`,
-
-  recordatorio: (d) =>
-    `Recordatorio de pago — ${d.nombre || "Cliente"}: adjuntamos el resumen de cuenta de Personal Argentina por el período ${d.periodo || "indicado"}. Total: ${ARS(d.total)}. Si ya realizaste el pago, por favor ignorá este mensaje. De lo contrario, te pedimos que lo gestiones a la brevedad. Gracias.`,
+const NIVELES = {
+  0: null,
+  1: {
+    nombre:       "Nivel 1",
+    consumoClientes: 0,      // solo por usar la app
+    reintegroFactura: 10,    // % reintegro pagando factura
+    topeReintegro: 750,
+    reintegroRecarga: 20,    // % crédito extra recargas
+    frecuencia: "Mensual",
+    color: "#a7f3d0",
+  },
+  2: {
+    nombre:       "Nivel 2",
+    consumoClientes: 75000,
+    reintegroFactura: 15,
+    topeReintegro: 2000,
+    reintegroRecarga: 20,
+    frecuencia: "Mensual",
+    color: "#00AEEF",
+  },
+  3: {
+    nombre:       "Nivel 3",
+    consumoClientes: 200000,
+    reintegroFactura: 20,
+    topeReintegro: 3500,
+    reintegroRecarga: 20,
+    frecuencia: "Mensual",
+    color: "#5118C5",
+  },
+  4: {
+    nombre:       "Nivel 4",
+    consumoClientes: 300000,
+    reintegroFactura: 25,
+    topeReintegro: 7000,
+    reintegroRecarga: 20,
+    frecuencia: "Mensual",
+    color: "#002B49",
+  },
 };
 
+function generarSpeech(nivel, inv) {
+  const nombre      = inv.nombre ? inv.nombre.split(" ")[0] : "cliente";
+  const totalFact   = inv.total || 0;
+  const totalDesc   = inv.totalDescuentos || 0;
+  const precioLista = inv.precioLista || 0;
+  const periodo     = inv.periodo || "este período";
+
+  if (nivel === 0) {
+    // Sin nivel — solo habla de la factura y descuentos logrados
+    if (totalDesc > 0) {
+      return `Hola ${nombre}! Te cuento que pude gestionar un descuento de ${ARS(totalDesc)} en tu factura de Personal del período ${periodo}. Tu precio de lista era ${ARS(precioLista)} y te quedó en ${ARS(totalFact)} — así que ya tenés un ahorro concreto. Cualquier consulta sobre tu servicio, estoy disponible.`;
+    } else {
+      return `Hola ${nombre}! Te paso el detalle de tu factura de Personal del período ${periodo}. El total es ${ARS(totalFact)}. Si querés revisar algún concepto o tenés una consulta, avisame.`;
+    }
+  }
+
+  const n = NIVELES[nivel];
+  const reintegroEst = Math.min(totalFact * (n.reintegroFactura / 100), n.topeReintegro);
+  const ahorroTotal  = totalDesc + reintegroEst;
+
+  let consumoMsg = "";
+  if (nivel === 1) {
+    consumoMsg = `y lo mejor es que ya estás en ${n.nombre} solo por usar la app de Personal`;
+  } else {
+    consumoMsg = `para mantenerte en ${n.nombre} necesitás un consumo desde ${ARS(n.consumoClientes)} mensual entre todos tus servicios Personal`;
+  }
+
+  let speech = `Hola ${nombre}! Mirá lo que pude hacer por vos. `;
+
+  if (totalDesc > 0) {
+    speech += `Primero, te gestioné un descuento de ${ARS(totalDesc)} directo en tu factura — bajaste de ${ARS(precioLista)} a ${ARS(totalFact)} en el período ${periodo}. `;
+  } else {
+    speech += `Tu factura del período ${periodo} quedó en ${ARS(totalFact)}. `;
+  }
+
+  speech += `Además, con tu ${n.nombre} de Personal Pay, pagando esta factura desde la app te entra un reintegro de hasta ${ARS(reintegroEst)} (${n.reintegroFactura}% con tope de ${ARS(n.topeReintegro)} mensual). `;
+
+  if (ahorroTotal > 0) {
+    speech += `En total, entre el descuento y el reintegro, tu margen de ahorro es de aproximadamente ${ARS(ahorroTotal)}. `;
+  }
+
+  speech += `También tenés un 20% de crédito extra en todas tus recargas Personal Pay (semanal), y hasta 15% de reintegro en Tienda Personal sin tope. `;
+  speech += `Y si pagás con Personal Pay en supermercados tenés hasta 20% de ahorro semanal. `;
+  speech += `${consumoMsg.charAt(0).toUpperCase() + consumoMsg.slice(1)}. `;
+
+  if (nivel < 4) {
+    const sig = NIVELES[nivel + 1];
+    speech += `Si subís al ${sig.nombre} (desde ${ARS(sig.consumoClientes)}/mes), tu reintegro en factura sube al ${sig.reintegroFactura}% con tope de ${ARS(sig.topeReintegro)}.`;
+  } else {
+    speech += `Ya estás en el nivel máximo — aprovechá todos los beneficios.`;
+  }
+
+  return speech;
+}
+
+// ─── RENDER TARJETA DE BENEFICIOS ─────────────────────────
+function renderBenefits(nivel) {
+  const el = document.getElementById("speech-benefits");
+  if (nivel === 0) { el.innerHTML = ""; return; }
+  const n = NIVELES[nivel];
+  el.innerHTML = `
+    <div class="benefits-card">
+      <div class="ben-badge" style="background:${n.color}">${n.nombre}</div>
+      <div class="ben-items">
+        <div class="ben-item">
+          <span class="ben-label">Reintegro factura Personal</span>
+          <span class="ben-val">${n.reintegroFactura}% · hasta ${ARS(n.topeReintegro)}/mes</span>
+        </div>
+        <div class="ben-item">
+          <span class="ben-label">Crédito extra recargas</span>
+          <span class="ben-val">20% semanal</span>
+        </div>
+        <div class="ben-item">
+          <span class="ben-label">Tienda Personal</span>
+          <span class="ben-val">Hasta 15% sin tope/mes</span>
+        </div>
+        <div class="ben-item">
+          <span class="ben-label">Personal Pay supermercados</span>
+          <span class="ben-val">Hasta 20% semanal</span>
+        </div>
+        ${nivel < 4 ? `<div class="ben-upgrade">▲ Próximo nivel: ${NIVELES[nivel+1].nombre} desde ${ARS(NIVELES[nivel+1].consumoClientes)}/mes → ${NIVELES[nivel+1].reintegroFactura}% reintegro</div>` : '<div class="ben-upgrade">⭐ Nivel máximo alcanzado</div>'}
+      </div>
+    </div>
+  `;
+}
+
+// ─── BOTONES DE NIVEL ─────────────────────────────────────
 document.querySelectorAll(".btn-speech").forEach(btn => {
   btn.addEventListener("click", () => {
-    const tone  = btn.dataset.tone;
+    const nivel = +btn.dataset.nivel;
     const inv   = window._lastInvoice || {};
-    const texto = SPEECH_TEMPLATES[tone](inv);
 
     document.querySelectorAll(".btn-speech").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
 
-    document.getElementById("speech-text").textContent = texto;
+    renderBenefits(nivel);
+    document.getElementById("speech-text").textContent = generarSpeech(nivel, inv);
     document.getElementById("speech-output").classList.remove("hidden");
   });
 });

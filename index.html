@@ -109,17 +109,19 @@
 
       <div class="card">
         <h2 class="card-title">Conceptos</h2>
+        <div class="conceptos-header">
+          <span>Descripción</span>
+          <span>Precio lista</span>
+          <span>Descuento $</span>
+          <span></span>
+        </div>
         <div id="conceptos-list"></div>
         <button class="btn-add" id="btn-add-concepto">+ Agregar concepto</button>
       </div>
 
       <div class="card">
-        <h2 class="card-title">Ajustes y Descuentos</h2>
+        <h2 class="card-title">Ajustes</h2>
         <div class="form-grid">
-          <div class="field">
-            <label>Descuento (%)</label>
-            <input type="number" id="f-descuento" placeholder="0" min="0" max="100" />
-          </div>
           <div class="field">
             <label>Crédito a favor ($)</label>
             <input type="number" id="f-credito" placeholder="0" min="0" />
@@ -154,16 +156,17 @@
     <!-- TAB: MENSAJE -->
     <div id="tab-speech" class="tab-content hidden">
       <div class="card">
-        <h2 class="card-title">Mensaje de Cierre</h2>
-        <p class="speech-hint">Elegí el tono del mensaje para enviar al cliente</p>
+        <h2 class="card-title">Mensaje de Retención</h2>
+        <p class="speech-hint">Seleccioná el nivel de Personal Pay del cliente para generar el mensaje</p>
         <div class="speech-btns">
-          <button class="btn-speech" data-tone="formal">Formal</button>
-          <button class="btn-speech" data-tone="cordial">Cordial</button>
-          <button class="btn-speech" data-tone="urgente">Urgente</button>
-          <button class="btn-speech" data-tone="amigable">Amigable</button>
-          <button class="btn-speech" data-tone="recordatorio">Recordatorio</button>
+          <button class="btn-speech" data-nivel="0">Sin nivel</button>
+          <button class="btn-speech" data-nivel="1">Nivel 1</button>
+          <button class="btn-speech" data-nivel="2">Nivel 2</button>
+          <button class="btn-speech" data-nivel="3">Nivel 3</button>
+          <button class="btn-speech" data-nivel="4">Nivel 4</button>
         </div>
         <div id="speech-output" class="speech-output hidden">
+          <div class="speech-benefits" id="speech-benefits"></div>
           <p id="speech-text"></p>
           <button class="btn-copy" id="btn-copy-speech">📋 Copiar mensaje</button>
         </div>
