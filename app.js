@@ -6,7 +6,7 @@
 // ═══════════════════════════════════════════════════════════
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 // ─── CONFIGURACIÓN FIREBASE ────────────────────────────────
@@ -57,12 +57,17 @@ document.getElementById("btn-google-login").addEventListener("click", async () =
   const errEl = document.getElementById("auth-error");
   errEl.textContent = "";
   try {
-    await signInWithPopup(auth, provider);
+    await signInWithRedirect(auth, provider);
   } catch (e) {
     errEl.textContent = "Error al iniciar sesión: " + e.message;
   }
 });
 
+
+// Capturar resultado al volver del redirect de Google
+getRedirectResult(auth).catch((e) => {
+  if (e) document.getElementById("auth-error").textContent = "Error: " + e.message;
+});
 document.getElementById("btn-logout").addEventListener("click", async () => {
   await signOut(auth);
 });
