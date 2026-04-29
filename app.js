@@ -149,7 +149,7 @@ function renderConceptos() {
         data-i="${i}" data-k="pct" class="monto descuento-col" />
       <span class="concepto-neto">${lista > 0 ? ARS(neto) : "—"}</span>
       <button class="btn-remove-concepto" data-i="${i}" title="Eliminar">✕</button>
-    \`;
+    `;
     list.appendChild(row);
   });
 
