@@ -750,3 +750,113 @@ td.lista-col { color: var(--gray-600); font-family: var(--mono); }
   text-transform: uppercase;
   letter-spacing: .06em;
 }
+
+/* ═══════════════════════════════════════
+   FORM GRID VARIANTS
+═══════════════════════════════════════ */
+.form-grid-2 { grid-template-columns: 1fr 1fr; }
+.form-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+@media (max-width: 600px) {
+  .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════
+   CICLOS
+═══════════════════════════════════════ */
+.ciclo-btns {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.btn-ciclo {
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1.5px solid var(--gray-200);
+  background: var(--white);
+  color: var(--gray-600);
+  font-size: .88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn-ciclo:hover { border-color: var(--cyan); color: var(--cyan); }
+.btn-ciclo.active {
+  background: var(--cyan);
+  border-color: var(--cyan);
+  color: var(--white);
+}
+.ciclo-hint {
+  font-size: .78rem;
+  color: var(--gray-400);
+  margin-top: 8px;
+  font-style: italic;
+}
+
+/* ═══════════════════════════════════════
+   ADICIONALES
+═══════════════════════════════════════ */
+.adicionales-preset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gray-100);
+}
+.btn-preset {
+  padding: 6px 14px;
+  border-radius: 16px;
+  border: 1.5px solid var(--gray-200);
+  background: var(--white);
+  font-size: .82rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--gray-600);
+  transition: all .15s;
+}
+.btn-preset:hover {
+  border-color: var(--purple, #5118C5);
+  color: var(--purple, #5118C5);
+}
+
+.adicional-row {
+  display: grid;
+  grid-template-columns: 1.4fr 110px 70px 90px 32px;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.adicional-nombre {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.adicional-logo {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.adicional-name-input {
+  flex: 1;
+  min-width: 0;
+}
+.adicionales-list { margin-bottom: 4px; }
+
+/* ═══════════════════════════════════════
+   FACTURA — SECCIÓN HEADER
+═══════════════════════════════════════ */
+.inv-table tr.sec-header td {
+  background: #f0f4f8;
+  font-weight: 700;
+  font-size: .8rem;
+  letter-spacing: .04em;
+  color: #444;
+  padding: 6px 10px;
+}
+.inv-totals .desc-ct {
+  font-size: .82rem;
+  padding-left: 20px;
+  opacity: .85;
+}

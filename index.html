@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#002B49" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Go-Bill · Personal Argentina</title>
   <link rel="icon" href="assets/logo-gobill.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -15,9 +13,6 @@
 </head>
 <body>
 
-  <!-- ══════════════════════════════════════════
-       PANTALLA DE LOGIN
-  ══════════════════════════════════════════ -->
   <div id="screen-auth" class="screen">
     <div class="auth-box">
       <img src="assets/logo-gobill.png" alt="Go-Bill" class="auth-logo" onerror="this.style.display='none'" />
@@ -33,12 +28,7 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════
-       APP PRINCIPAL
-  ══════════════════════════════════════════ -->
   <div id="screen-app" class="screen hidden">
-
-    <!-- NAVBAR -->
     <nav class="navbar">
       <img src="assets/logo-gobill.png" alt="Go-Bill" class="nav-logo" onerror="this.style.display='none'" />
       <span class="nav-title">Go-Bill</span>
@@ -55,28 +45,13 @@
 
     <!-- TAB: FORMULARIO -->
     <div id="tab-form" class="tab-content active">
+
       <div class="card">
         <h2 class="card-title">Datos del Cliente</h2>
-        <div class="form-grid">
+        <div class="form-grid form-grid-2">
           <div class="field">
-            <label>Nombre completo</label>
+            <label>Nombre y Apellido</label>
             <input type="text" id="f-nombre" placeholder="Juan Pérez" />
-          </div>
-          <div class="field">
-            <label>DNI</label>
-            <input type="text" id="f-dni" placeholder="12.345.678" />
-          </div>
-          <div class="field">
-            <label>Dirección</label>
-            <input type="text" id="f-direccion" placeholder="Av. Corrientes 1234" />
-          </div>
-          <div class="field">
-            <label>Teléfono</label>
-            <input type="text" id="f-telefono" placeholder="11 1234-5678" />
-          </div>
-          <div class="field">
-            <label>Email</label>
-            <input type="email" id="f-email" placeholder="cliente@email.com" />
           </div>
           <div class="field">
             <label>Nro. de cuenta</label>
@@ -87,42 +62,80 @@
 
       <div class="card">
         <h2 class="card-title">Datos de la Factura</h2>
-        <div class="form-grid">
-          <div class="field">
-            <label>Fecha de factura</label>
-            <input type="date" id="f-fecha" />
+        <div class="field" style="margin-bottom:14px">
+          <label>Ciclo de facturación</label>
+          <div class="ciclo-btns">
+            <button class="btn-ciclo" data-ciclo="7">Ciclo 7</button>
+            <button class="btn-ciclo" data-ciclo="14">Ciclo 14</button>
+            <button class="btn-ciclo" data-ciclo="21">Ciclo 21</button>
+            <button class="btn-ciclo" data-ciclo="28">Ciclo 28</button>
           </div>
+        </div>
+        <div class="form-grid form-grid-2">
           <div class="field">
             <label>Período facturado</label>
-            <input type="text" id="f-periodo" placeholder="Abril 2025" />
+            <input type="text" id="f-periodo" placeholder="Se autocompletará" readonly />
           </div>
           <div class="field">
             <label>Nro. de factura</label>
             <input type="text" id="f-nrofactura" placeholder="0001-00012345" />
           </div>
           <div class="field">
+            <label>Fecha de emisión</label>
+            <input type="date" id="f-fecha" readonly />
+          </div>
+          <div class="field">
             <label>Fecha de vencimiento</label>
-            <input type="date" id="f-vencimiento" />
+            <input type="date" id="f-vencimiento" readonly />
+          </div>
+        </div>
+        <p id="ciclo-hint" class="ciclo-hint">Seleccioná un ciclo para autocompletar las fechas</p>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">🏠 Hogar</h2>
+        <div class="conceptos-header">
+          <span>Descripción</span><span>Precio lista</span><span>Dto %</span><span>Neto</span><span></span>
+        </div>
+        <div id="conceptos-hogar"></div>
+        <button class="btn-add" data-seccion="hogar">+ Agregar línea</button>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">📱 Móvil</h2>
+        <div class="conceptos-header">
+          <span>Descripción</span><span>Precio lista</span><span>Dto %</span><span>Neto</span><span></span>
+        </div>
+        <div id="conceptos-movil"></div>
+        <button class="btn-add" data-seccion="movil">+ Agregar línea</button>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">🎬 Adicionales</h2>
+        <div id="adicionales-list" class="adicionales-list"></div>
+        <div class="adicionales-preset">
+          <button class="btn-preset" data-nombre="Netflix" data-logo="assets/netflix.png">Netflix</button>
+          <button class="btn-preset" data-nombre="HBO+" data-logo="assets/hbo.png">HBO+</button>
+          <button class="btn-preset" data-nombre="Paramount+" data-logo="assets/paramount.png">Paramount+</button>
+          <button class="btn-preset" data-nombre="Disney+" data-logo="assets/disney.png">Disney+</button>
+          <button class="btn-preset" data-nombre="Universal+" data-logo="assets/universal.png">Universal+</button>
+          <button class="btn-preset" data-nombre="" data-logo="">+ Personalizado</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">🔗 Descuento Conexión Total</h2>
+        <div class="form-grid form-grid-2">
+          <div class="field">
+            <label>Descuento nominal ($)</label>
+            <input type="number" id="f-descuento-ct" placeholder="0" min="0" />
           </div>
         </div>
       </div>
 
       <div class="card">
-        <h2 class="card-title">Conceptos</h2>
-        <div class="conceptos-header">
-          <span>Descripción</span>
-          <span>Precio lista</span>
-          <span>Descuento %</span>
-          <span>Neto</span>
-          <span></span>
-        </div>
-        <div id="conceptos-list"></div>
-        <button class="btn-add" id="btn-add-concepto">+ Agregar concepto</button>
-      </div>
-
-      <div class="card">
         <h2 class="card-title">Ajustes</h2>
-        <div class="form-grid">
+        <div class="form-grid form-grid-3">
           <div class="field">
             <label>Crédito a favor ($)</label>
             <input type="number" id="f-credito" placeholder="0" min="0" />
@@ -138,7 +151,6 @@
         </div>
       </div>
 
-      <!-- SIMULADOR PERSONAL PAY EN FORMULARIO -->
       <div class="card" id="sim-form-card">
         <h2 class="card-title">Personal Pay · Beneficios del Cliente</h2>
         <p class="speech-hint">Ingresá el consumo mensual del cliente para ver a qué nivel accede</p>
@@ -151,35 +163,35 @@
         <div class="niveles-table">
           <div class="nivel-col header-col">
             <div class="nivel-header-cell"></div>
-            <div class="nivel-row-cell label">Consumo mínimo</div>
-            <div class="nivel-row-cell label">Reintegro factura</div>
+            <div class="nivel-row-cell label">Consumo</div>
+            <div class="nivel-row-cell label">Reintegro</div>
             <div class="nivel-row-cell label">Tope/mes</div>
-            <div class="nivel-row-cell label">Reintegro estimado</div>
+            <div class="nivel-row-cell label">Estimado</div>
           </div>
           <div class="nivel-col" id="form-nivel-col-1">
-            <div class="nivel-header-cell"><span class="nivel-badge n1">Nivel 1</span></div>
-            <div class="nivel-row-cell">Solo con la app</div>
+            <div class="nivel-header-cell"><span class="nivel-badge n1">N1</span></div>
+            <div class="nivel-row-cell">App</div>
             <div class="nivel-row-cell highlight">10%</div>
             <div class="nivel-row-cell">$750</div>
             <div class="nivel-row-cell reintegro-val" id="form-rei-1">—</div>
           </div>
           <div class="nivel-col" id="form-nivel-col-2">
-            <div class="nivel-header-cell"><span class="nivel-badge n2">Nivel 2</span></div>
-            <div class="nivel-row-cell">$75.000</div>
+            <div class="nivel-header-cell"><span class="nivel-badge n2">N2</span></div>
+            <div class="nivel-row-cell">$75k</div>
             <div class="nivel-row-cell highlight">15%</div>
             <div class="nivel-row-cell">$2.000</div>
             <div class="nivel-row-cell reintegro-val" id="form-rei-2">—</div>
           </div>
           <div class="nivel-col" id="form-nivel-col-3">
-            <div class="nivel-header-cell"><span class="nivel-badge n3">Nivel 3</span></div>
-            <div class="nivel-row-cell">$200.000</div>
+            <div class="nivel-header-cell"><span class="nivel-badge n3">N3</span></div>
+            <div class="nivel-row-cell">$200k</div>
             <div class="nivel-row-cell highlight">20%</div>
             <div class="nivel-row-cell">$3.500</div>
             <div class="nivel-row-cell reintegro-val" id="form-rei-3">—</div>
           </div>
           <div class="nivel-col" id="form-nivel-col-4">
-            <div class="nivel-header-cell"><span class="nivel-badge n4">Nivel 4</span></div>
-            <div class="nivel-row-cell">$300.000</div>
+            <div class="nivel-header-cell"><span class="nivel-badge n4">N4</span></div>
+            <div class="nivel-row-cell">$300k</div>
             <div class="nivel-row-cell highlight">25%</div>
             <div class="nivel-row-cell">$7.000</div>
             <div class="nivel-row-cell reintegro-val" id="form-rei-4">—</div>
@@ -210,12 +222,9 @@
 
     <!-- TAB: MENSAJE -->
     <div id="tab-speech" class="tab-content hidden">
-
-      <!-- SIMULADOR PERSONAL PAY -->
       <div class="card">
         <h2 class="card-title">Simulador Personal Pay</h2>
         <p class="speech-hint">Ingresá el consumo mensual del cliente para ver a qué nivel accede y cuánto ahorra</p>
-
         <div class="sim-input-row">
           <div class="field" style="flex:1">
             <label>Consumo mensual del cliente ($)</label>
@@ -226,8 +235,6 @@
             <input type="number" id="sim-factura" placeholder="Ej: 25000" min="0" />
           </div>
         </div>
-
-        <!-- TABLA DE NIVELES -->
         <div class="niveles-table">
           <div class="nivel-col header-col">
             <div class="nivel-header-cell"></div>
@@ -239,9 +246,7 @@
             <div class="nivel-row-cell label">Personal Pay super</div>
           </div>
           <div class="nivel-col" id="nivel-col-1">
-            <div class="nivel-header-cell">
-              <span class="nivel-badge n1">Nivel 1</span>
-            </div>
+            <div class="nivel-header-cell"><span class="nivel-badge n1">Nivel 1</span></div>
             <div class="nivel-row-cell">Solo con la app</div>
             <div class="nivel-row-cell highlight">10%</div>
             <div class="nivel-row-cell">hasta $750/mes</div>
@@ -250,9 +255,7 @@
             <div class="nivel-row-cell">hasta 20% semanal</div>
           </div>
           <div class="nivel-col" id="nivel-col-2">
-            <div class="nivel-header-cell">
-              <span class="nivel-badge n2">Nivel 2</span>
-            </div>
+            <div class="nivel-header-cell"><span class="nivel-badge n2">Nivel 2</span></div>
             <div class="nivel-row-cell">desde $75.000</div>
             <div class="nivel-row-cell highlight">15%</div>
             <div class="nivel-row-cell">hasta $2.000/mes</div>
@@ -261,9 +264,7 @@
             <div class="nivel-row-cell">hasta 20% semanal</div>
           </div>
           <div class="nivel-col" id="nivel-col-3">
-            <div class="nivel-header-cell">
-              <span class="nivel-badge n3">Nivel 3</span>
-            </div>
+            <div class="nivel-header-cell"><span class="nivel-badge n3">Nivel 3</span></div>
             <div class="nivel-row-cell">desde $200.000</div>
             <div class="nivel-row-cell highlight">20%</div>
             <div class="nivel-row-cell">hasta $3.500/mes</div>
@@ -272,9 +273,7 @@
             <div class="nivel-row-cell">hasta 20% semanal</div>
           </div>
           <div class="nivel-col" id="nivel-col-4">
-            <div class="nivel-header-cell">
-              <span class="nivel-badge n4">Nivel 4</span>
-            </div>
+            <div class="nivel-header-cell"><span class="nivel-badge n4">Nivel 4</span></div>
             <div class="nivel-row-cell">desde $300.000</div>
             <div class="nivel-row-cell highlight">25%</div>
             <div class="nivel-row-cell">hasta $7.000/mes</div>
@@ -283,7 +282,6 @@
             <div class="nivel-row-cell">hasta 20% semanal</div>
           </div>
         </div>
-
         <div id="sim-result" class="sim-result hidden">
           <div id="sim-nivel-badge" class="sim-nivel-badge"></div>
           <div id="sim-ahorro-total" class="sim-ahorro-total"></div>
@@ -291,11 +289,9 @@
         </div>
       </div>
 
-      <!-- GENERADOR DE MENSAJE -->
       <div class="card">
         <h2 class="card-title">Generar Mensaje</h2>
         <p class="speech-hint">Seleccioná el perfil del cliente y su nivel para armar el mensaje de retención</p>
-
         <div class="speech-section-label">Perfil del cliente</div>
         <div class="speech-perfiles">
           <button class="btn-perfil active" data-perfil="positivo">😊 Positivo</button>
@@ -308,7 +304,6 @@
           <button class="btn-perfil" data-perfil="relajado">😎 Relajado</button>
           <button class="btn-perfil" data-perfil="controlador">🎯 Controlador</button>
         </div>
-
         <div class="speech-section-label" style="margin-top:16px">Nivel Personal Pay</div>
         <div class="speech-btns">
           <button class="btn-speech" data-nivel="0">Sin nivel</button>
@@ -323,15 +318,10 @@
           <button class="btn-copy" id="btn-copy-speech">📋 Copiar mensaje</button>
         </div>
       </div>
-
     </div>
-
   </div>
 
-  <!-- TOAST -->
   <div id="toast" class="toast hidden"></div>
-
-  <!-- Firebase SDK -->
   <script type="module" src="app.js"></script>
 </body>
 </html>
