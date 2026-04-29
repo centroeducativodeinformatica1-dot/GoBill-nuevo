@@ -155,9 +155,91 @@
 
     <!-- TAB: MENSAJE -->
     <div id="tab-speech" class="tab-content hidden">
+
+      <!-- SIMULADOR PERSONAL PAY -->
       <div class="card">
-        <h2 class="card-title">Mensaje de Retención</h2>
-        <p class="speech-hint">Seleccioná el nivel de Personal Pay del cliente para generar el mensaje</p>
+        <h2 class="card-title">Simulador Personal Pay</h2>
+        <p class="speech-hint">Ingresá el consumo mensual del cliente para ver a qué nivel accede y cuánto ahorra</p>
+
+        <div class="sim-input-row">
+          <div class="field" style="flex:1">
+            <label>Consumo mensual del cliente ($)</label>
+            <input type="number" id="sim-consumo" placeholder="Ej: 150000" min="0" />
+          </div>
+          <div class="field" style="flex:1">
+            <label>Monto de factura Personal ($)</label>
+            <input type="number" id="sim-factura" placeholder="Ej: 25000" min="0" />
+          </div>
+        </div>
+
+        <!-- TABLA DE NIVELES -->
+        <div class="niveles-table">
+          <div class="nivel-col header-col">
+            <div class="nivel-header-cell"></div>
+            <div class="nivel-row-cell label">Consumo mínimo</div>
+            <div class="nivel-row-cell label">Reintegro factura</div>
+            <div class="nivel-row-cell label">Tope reintegro/mes</div>
+            <div class="nivel-row-cell label">Reintegro estimado</div>
+            <div class="nivel-row-cell label">Recargas</div>
+            <div class="nivel-row-cell label">Personal Pay super</div>
+          </div>
+          <div class="nivel-col" id="nivel-col-1">
+            <div class="nivel-header-cell">
+              <span class="nivel-badge n1">Nivel 1</span>
+            </div>
+            <div class="nivel-row-cell">Solo con la app</div>
+            <div class="nivel-row-cell highlight">10%</div>
+            <div class="nivel-row-cell">hasta $750/mes</div>
+            <div class="nivel-row-cell reintegro-val" id="rei-1">—</div>
+            <div class="nivel-row-cell">20% crédito extra</div>
+            <div class="nivel-row-cell">hasta 20% semanal</div>
+          </div>
+          <div class="nivel-col" id="nivel-col-2">
+            <div class="nivel-header-cell">
+              <span class="nivel-badge n2">Nivel 2</span>
+            </div>
+            <div class="nivel-row-cell">desde $75.000</div>
+            <div class="nivel-row-cell highlight">15%</div>
+            <div class="nivel-row-cell">hasta $2.000/mes</div>
+            <div class="nivel-row-cell reintegro-val" id="rei-2">—</div>
+            <div class="nivel-row-cell">20% crédito extra</div>
+            <div class="nivel-row-cell">hasta 20% semanal</div>
+          </div>
+          <div class="nivel-col" id="nivel-col-3">
+            <div class="nivel-header-cell">
+              <span class="nivel-badge n3">Nivel 3</span>
+            </div>
+            <div class="nivel-row-cell">desde $200.000</div>
+            <div class="nivel-row-cell highlight">20%</div>
+            <div class="nivel-row-cell">hasta $3.500/mes</div>
+            <div class="nivel-row-cell reintegro-val" id="rei-3">—</div>
+            <div class="nivel-row-cell">20% crédito extra</div>
+            <div class="nivel-row-cell">hasta 20% semanal</div>
+          </div>
+          <div class="nivel-col" id="nivel-col-4">
+            <div class="nivel-header-cell">
+              <span class="nivel-badge n4">Nivel 4</span>
+            </div>
+            <div class="nivel-row-cell">desde $300.000</div>
+            <div class="nivel-row-cell highlight">25%</div>
+            <div class="nivel-row-cell">hasta $7.000/mes</div>
+            <div class="nivel-row-cell reintegro-val" id="rei-4">—</div>
+            <div class="nivel-row-cell">20% crédito extra</div>
+            <div class="nivel-row-cell">hasta 20% semanal</div>
+          </div>
+        </div>
+
+        <div id="sim-result" class="sim-result hidden">
+          <div id="sim-nivel-badge" class="sim-nivel-badge"></div>
+          <div id="sim-ahorro-total" class="sim-ahorro-total"></div>
+          <div id="sim-detalle" class="sim-detalle"></div>
+        </div>
+      </div>
+
+      <!-- GENERADOR DE MENSAJE -->
+      <div class="card">
+        <h2 class="card-title">Generar Mensaje</h2>
+        <p class="speech-hint">Seleccioná el nivel del cliente para armar el mensaje de retención</p>
         <div class="speech-btns">
           <button class="btn-speech" data-nivel="0">Sin nivel</button>
           <button class="btn-speech" data-nivel="1">Nivel 1</button>
@@ -171,6 +253,7 @@
           <button class="btn-copy" id="btn-copy-speech">📋 Copiar mensaje</button>
         </div>
       </div>
+
     </div>
 
   </div>

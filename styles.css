@@ -543,6 +543,115 @@ td.lista-col { color: var(--gray-600); font-family: var(--mono); }
 .toast.error   { background: #991b1b; }
 
 /* ═══════════════════════════════════════
+   SIMULADOR PERSONAL PAY
+═══════════════════════════════════════ */
+.sim-input-row {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+@media (max-width: 500px) { .sim-input-row { flex-direction: column; } }
+
+/* Tabla de niveles */
+.niveles-table {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
+  font-size: .82rem;
+}
+
+.nivel-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--gray-200);
+  transition: background .2s;
+}
+.nivel-col:last-child { border-right: none; }
+.header-col { flex: 0 0 110px; background: var(--gray-50); }
+@media (max-width: 600px) { .header-col { flex: 0 0 80px; } }
+
+.nivel-header-cell {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--dark);
+  padding: 8px 6px;
+}
+.header-col .nivel-header-cell { background: var(--dark); }
+
+.nivel-row-cell {
+  padding: 8px 6px;
+  border-top: 1px solid var(--gray-100);
+  text-align: center;
+  color: var(--gray-600);
+  line-height: 1.3;
+}
+.nivel-row-cell.label {
+  text-align: left;
+  font-weight: 500;
+  color: var(--gray-700);
+  background: var(--gray-50);
+  padding-left: 10px;
+}
+.nivel-row-cell.highlight { font-weight: 700; color: var(--dark); font-size: .9rem; }
+
+/* Badges */
+.nivel-badge {
+  font-size: .72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  color: var(--white);
+}
+.nivel-badge.n1 { background: #059669; }
+.nivel-badge.n2 { background: var(--cyan); }
+.nivel-badge.n3 { background: var(--violet); }
+.nivel-badge.n4 { background: #1e3a5f; }
+
+/* Active nivel column */
+.nivel-activo { background: #f0fdf4; }
+.nivel-activo .nivel-row-cell { color: #166534; }
+.nivel-activo .nivel-row-cell.highlight { color: #14532d; font-size: 1rem; }
+.nivel-siguiente { background: #fefce8; }
+.nivel-siguiente .nivel-row-cell { color: #854d0e; }
+
+.reintegro-val { font-family: var(--mono); font-weight: 600; font-size: .85rem; }
+.rei-activo { color: #166534 !important; }
+
+/* Result panel */
+.sim-result {
+  background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+  border: 1.5px solid #86efac;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sim-nivel-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: .8rem;
+  font-weight: 700;
+  color: var(--white);
+  width: fit-content;
+}
+.sim-nivel-badge.n1 { background: #059669; }
+.sim-nivel-badge.n2 { background: var(--cyan); }
+.sim-nivel-badge.n3 { background: var(--violet); }
+.sim-nivel-badge.n4 { background: #1e3a5f; }
+.sim-ahorro-total { font-size: .92rem; color: #166534; }
+.sim-ahorro-total strong { font-size: 1.05rem; }
+.sim-detalle { font-size: .82rem; color: #065f46; }
+
+/* ═══════════════════════════════════════
    PRINT
 ═══════════════════════════════════════ */
 @media print {

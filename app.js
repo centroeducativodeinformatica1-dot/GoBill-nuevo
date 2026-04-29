@@ -469,11 +469,98 @@ function renderBenefits(nivel) {
   `;
 }
 
+// ═══════════════════════════════════════════════════════════
+//  SIMULADOR PERSONAL PAY
+// ═══════════════════════════════════════════════════════════
+
+const SIM_NIVELES = [
+  { nivel: 1, consumoMin: 0,      pct: 10, tope: 750  },
+  { nivel: 2, consumoMin: 75000,  pct: 15, tope: 2000 },
+  { nivel: 3, consumoMin: 200000, pct: 20, tope: 3500 },
+  { nivel: 4, consumoMin: 300000, pct: 25, tope: 7000 },
+];
+
+function getNivelActual(consumo) {
+  let actual = SIM_NIVELES[0];
+  for (const n of SIM_NIVELES) {
+    if (consumo >= n.consumoMin) actual = n;
+  }
+  return actual;
+}
+
+function actualizarSimulador() {
+  const consumo  = parseFloat(document.getElementById("sim-consumo").value)  || 0;
+  const factura  = parseFloat(document.getElementById("sim-factura").value)   || 0;
+  const nivelAct = getNivelActual(consumo);
+
+  // Highlight columna activa y calcular reintegros
+  SIM_NIVELES.forEach(n => {
+    const col = document.getElementById("nivel-col-" + n.nivel);
+    const rei = document.getElementById("rei-" + n.nivel);
+    const activo = consumo > 0 && n.nivel <= nivelAct.nivel;
+    col.classList.toggle("nivel-activo", activo);
+    col.classList.toggle("nivel-siguiente", consumo > 0 && n.nivel === nivelAct.nivel + 1);
+
+    if (factura > 0) {
+      const monto = Math.min(factura * (n.pct / 100), n.tope);
+      rei.textContent = ARS(monto);
+      rei.classList.toggle("rei-activo", activo);
+    } else {
+      rei.textContent = "—";
+      rei.classList.remove("rei-activo");
+    }
+  });
+
+  // Panel resultado
+  const result = document.getElementById("sim-result");
+  if (consumo > 0) {
+    result.classList.remove("hidden");
+    const badge   = document.getElementById("sim-nivel-badge");
+    const ahorroEl = document.getElementById("sim-ahorro-total");
+    const detalle  = document.getElementById("sim-detalle");
+
+    const reintegroFact = factura > 0
+      ? Math.min(factura * (nivelAct.pct / 100), nivelAct.tope) : 0;
+
+    badge.textContent = "Nivel actual: " + nivelAct.nivel;
+    badge.className   = "sim-nivel-badge n" + nivelAct.nivel;
+
+    if (factura > 0) {
+      ahorroEl.innerHTML = `Reintegro estimado pagando factura con Personal Pay: <strong>${ARS(reintegroFact)}</strong>`;
+    } else {
+      ahorroEl.innerHTML = `Ingresá el monto de factura para ver el reintegro estimado`;
+    }
+
+    // Siguiente nivel
+    const sig = SIM_NIVELES.find(n => n.nivel === nivelAct.nivel + 1);
+    if (sig) {
+      const falta = sig.consumoMin - consumo;
+      detalle.textContent = `Para subir al Nivel ${sig.nivel} le faltan ${ARS(falta)}/mes de consumo → reintegro sube a ${sig.pct}% (hasta ${ARS(sig.tope)}/mes)`;
+    } else {
+      detalle.textContent = "¡Está en el nivel máximo! Aprovechá el 25% de reintegro con tope de $7.000/mes.";
+    }
+  } else {
+    result.classList.add("hidden");
+    // reset highlights
+    SIM_NIVELES.forEach(n => {
+      document.getElementById("nivel-col-" + n.nivel).classList.remove("nivel-activo","nivel-siguiente");
+    });
+  }
+}
+
+document.getElementById("sim-consumo").addEventListener("input", actualizarSimulador);
+document.getElementById("sim-factura").addEventListener("input", actualizarSimulador);
+
 // ─── BOTONES DE NIVEL ─────────────────────────────────────
 document.querySelectorAll(".btn-speech").forEach(btn => {
   btn.addEventListener("click", () => {
     const nivel = +btn.dataset.nivel;
     const inv   = window._lastInvoice || {};
+    // Enrich with simulator values if filled
+    const simConsumo  = parseFloat(document.getElementById("sim-consumo").value) || 0;
+    const simFactura  = parseFloat(document.getElementById("sim-factura").value) || 0;
+    if (simConsumo) inv.simConsumo = simConsumo;
+    if (simFactura && !inv.total) inv.total = simFactura;
 
     document.querySelectorAll(".btn-speech").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
