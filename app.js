@@ -128,7 +128,7 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 //  CONCEPTOS DINÁMICOS
 // ═══════════════════════════════════════════════════════════
 
-let conceptos = [{ desc: "", lista: "", descuento: "" }];
+let conceptos = [{ desc: "", lista: "", pct: "" }];
 
 function renderConceptos() {
   const list = document.getElementById("conceptos-list");
@@ -136,15 +136,20 @@ function renderConceptos() {
   conceptos.forEach((c, i) => {
     const row = document.createElement("div");
     row.className = "concepto-row";
+    const lista = parseFloat(c.lista) || 0;
+    const pct   = parseFloat(c.pct)   || 0;
+    const desc  = lista * pct / 100;
+    const neto  = lista - desc;
     row.innerHTML = `
       <input type="text"   placeholder="Ej: Internet + Cable" value="${c.desc}"
         data-i="${i}" data-k="desc" />
       <input type="number" placeholder="$ 0" value="${c.lista}"
         data-i="${i}" data-k="lista" class="monto" />
-      <input type="number" placeholder="$ 0" value="${c.descuento}"
-        data-i="${i}" data-k="descuento" class="monto descuento-col" />
+      <input type="number" placeholder="%" value="${c.pct}" min="0" max="100"
+        data-i="${i}" data-k="pct" class="monto descuento-col" />
+      <span class="concepto-neto">${lista > 0 ? ARS(neto) : "—"}</span>
       <button class="btn-remove-concepto" data-i="${i}" title="Eliminar">✕</button>
-    `;
+    \`;
     list.appendChild(row);
   });
 
@@ -153,6 +158,7 @@ function renderConceptos() {
       const i = +e.target.dataset.i;
       const k = e.target.dataset.k;
       conceptos[i][k] = e.target.value;
+      if (k === "lista" || k === "pct") renderConceptos();
     });
   });
   list.querySelectorAll(".btn-remove-concepto").forEach(btn => {
@@ -164,7 +170,7 @@ function renderConceptos() {
 }
 
 document.getElementById("btn-add-concepto").addEventListener("click", () => {
-  conceptos.push({ desc: "", lista: "", descuento: "" });
+  conceptos.push({ desc: "", lista: "", pct: "" });
   renderConceptos();
 });
 
@@ -179,8 +185,8 @@ document.getElementById("f-fecha").value = hoy;
 // ═══════════════════════════════════════════════════════════
 
 function calcularFactura(data) {
-  const precioLista     = conceptos.reduce((s, c) => s + (parseFloat(c.lista)    || 0), 0);
-  const totalDescuentos = conceptos.reduce((s, c) => s + (parseFloat(c.descuento)|| 0), 0);
+  const precioLista     = conceptos.reduce((s, c) => s + (parseFloat(c.lista) || 0), 0);
+  const totalDescuentos = conceptos.reduce((s, c) => { const l = parseFloat(c.lista)||0; const p = parseFloat(c.pct)||0; return s + l*(p/100); }, 0);
   const subtotal        = precioLista - totalDescuentos;
   const credito         = parseFloat(data.credito) || 0;
   const mora            = parseFloat(data.mora)    || 0;
@@ -220,7 +226,8 @@ document.getElementById("btn-generar").addEventListener("click", () => {
     .filter(c => c.desc || c.lista)
     .map(c => {
       const lista = parseFloat(c.lista) || 0;
-      const desc  = parseFloat(c.descuento) || 0;
+      const pctD  = parseFloat(c.pct) || 0;
+      const desc  = lista * pctD / 100;
       const neto  = lista - desc;
       return `<tr>
         <td>${c.desc || "—"}</td>
@@ -551,25 +558,7 @@ function actualizarSimulador() {
 document.getElementById("sim-consumo").addEventListener("input", actualizarSimulador);
 document.getElementById("sim-factura").addEventListener("input", actualizarSimulador);
 
-// ─── BOTONES DE NIVEL ─────────────────────────────────────
-document.querySelectorAll(".btn-speech").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const nivel = +btn.dataset.nivel;
-    const inv   = window._lastInvoice || {};
-    // Enrich with simulator values if filled
-    const simConsumo  = parseFloat(document.getElementById("sim-consumo").value) || 0;
-    const simFactura  = parseFloat(document.getElementById("sim-factura").value) || 0;
-    if (simConsumo) inv.simConsumo = simConsumo;
-    if (simFactura && !inv.total) inv.total = simFactura;
-
-    document.querySelectorAll(".btn-speech").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-
-    renderBenefits(nivel);
-    document.getElementById("speech-text").textContent = generarSpeech(nivel, inv);
-    document.getElementById("speech-output").classList.remove("hidden");
-  });
-});
+// ─── BOTONES DE NIVEL → manejados abajo con soporte de perfiles ─────────────────────────────────────
 
 document.getElementById("btn-copy-speech").addEventListener("click", async () => {
   const txt = document.getElementById("speech-text").textContent;
@@ -579,4 +568,211 @@ document.getElementById("btn-copy-speech").addEventListener("click", async () =>
   } catch {
     showToast("No se pudo copiar — seleccionalo manualmente", "");
   }
+});
+
+
+// ═══════════════════════════════════════════════════════════
+//  SIMULADOR EN FORMULARIO (form tab)
+// ═══════════════════════════════════════════════════════════
+
+function actualizarSimuladorForm() {
+  const consumo  = parseFloat(document.getElementById("form-sim-consumo").value) || 0;
+  // Use total from last generated invoice if available, otherwise sum conceptos
+  const facturaAmt = (() => {
+    if (window._lastInvoice && window._lastInvoice.total) return window._lastInvoice.total;
+    return conceptos.reduce((s, c) => {
+      const l = parseFloat(c.lista) || 0;
+      const p = parseFloat(c.pct)   || 0;
+      return s + (l - l * p / 100);
+    }, 0);
+  })();
+
+  const nivelAct = getNivelActual(consumo);
+
+  SIM_NIVELES.forEach(n => {
+    const col = document.getElementById("form-nivel-col-" + n.nivel);
+    const rei = document.getElementById("form-rei-" + n.nivel);
+    if (!col) return;
+    const activo    = consumo > 0 && n.nivel <= nivelAct.nivel;
+    const siguiente = consumo > 0 && n.nivel === nivelAct.nivel + 1;
+    col.classList.toggle("nivel-activo", activo);
+    col.classList.toggle("nivel-siguiente", siguiente);
+
+    if (facturaAmt > 0) {
+      const monto = Math.min(facturaAmt * (n.pct / 100), n.tope);
+      rei.textContent = ARS(monto);
+      rei.classList.toggle("rei-activo", activo);
+    } else {
+      rei.textContent = "—";
+      rei.classList.remove("rei-activo");
+    }
+  });
+
+  const result = document.getElementById("form-sim-result");
+  if (consumo > 0) {
+    result.classList.remove("hidden");
+    const badge   = document.getElementById("form-sim-nivel-badge");
+    const ahorroEl = document.getElementById("form-sim-ahorro");
+    const detalle  = document.getElementById("form-sim-detalle");
+    badge.textContent = "Nivel actual: " + nivelAct.nivel;
+    badge.className   = "sim-nivel-badge n" + nivelAct.nivel;
+    if (facturaAmt > 0) {
+      const rei = Math.min(facturaAmt * (nivelAct.pct / 100), nivelAct.tope);
+      ahorroEl.innerHTML = `Reintegro estimado pagando con Personal Pay: <strong>${ARS(rei)}</strong>`;
+    } else {
+      ahorroEl.innerHTML = "Generá la factura para ver el reintegro estimado";
+    }
+    const sig = SIM_NIVELES.find(n => n.nivel === nivelAct.nivel + 1);
+    if (sig) {
+      const falta = sig.consumoMin - consumo;
+      detalle.textContent = `Para subir al Nivel ${sig.nivel} le faltan ${ARS(falta)}/mes → reintegro sube a ${sig.pct}% (tope ${ARS(sig.tope)}/mes)`;
+    } else {
+      detalle.textContent = "¡Nivel máximo! 25% de reintegro con tope de $7.000/mes.";
+    }
+  } else {
+    result.classList.add("hidden");
+    SIM_NIVELES.forEach(n => {
+      const col = document.getElementById("form-nivel-col-" + n.nivel);
+      if (col) col.classList.remove("nivel-activo", "nivel-siguiente");
+    });
+  }
+}
+
+const formSimConsumoEl = document.getElementById("form-sim-consumo");
+if (formSimConsumoEl) formSimConsumoEl.addEventListener("input", actualizarSimuladorForm);
+
+// ═══════════════════════════════════════════════════════════
+//  PERFILES DE CLIENTE
+// ═══════════════════════════════════════════════════════════
+
+let _perfilActivo = "positivo";
+
+document.querySelectorAll(".btn-perfil").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".btn-perfil").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    _perfilActivo = btn.dataset.perfil;
+    // Re-render speech if a nivel is already selected
+    const nivelBtn = document.querySelector(".btn-speech.active");
+    if (nivelBtn) {
+      const nivel = +nivelBtn.dataset.nivel;
+      const inv   = window._lastInvoice || {};
+      document.getElementById("speech-text").textContent = generarSpeechConPerfil(nivel, inv, _perfilActivo);
+    }
+  });
+});
+
+// ─── SPEECH POR PERFIL ────────────────────────────────────
+
+function generarSpeechConPerfil(nivel, inv, perfil) {
+  const base = generarSpeechBase(nivel, inv);
+  return adaptarSpeechPerfil(base, inv, nivel, perfil);
+}
+
+function generarSpeechBase(nivel, inv) {
+  const nombre      = inv.nombre ? inv.nombre.split(" ")[0] : "cliente";
+  const totalFact   = inv.total || 0;
+  const totalDesc   = inv.totalDescuentos || 0;
+  const precioLista = inv.precioLista || 0;
+  const periodo     = inv.periodo || "este período";
+
+  if (nivel === 0) {
+    if (totalDesc > 0) {
+      return { nombre, texto: `${nombre}, conseguí un descuento de ${ARS(totalDesc)} en tu factura de Personal — bajaste de ${ARS(precioLista)} a ${ARS(totalFact)} para el período ${periodo}. 💰 Ya tenés un ahorro concreto. Cualquier consulta, estoy.` };
+    } else {
+      return { nombre, texto: `${nombre}, acá está el detalle de tu factura de Personal del período ${periodo}. Total: ${ARS(totalFact)}. Cualquier consulta, avisame.` };
+    }
+  }
+
+  const n = NIVELES[nivel];
+  const reintegroEst = Math.min(totalFact * (n.reintegroFactura / 100), n.topeReintegro);
+  const ahorroTotal  = totalDesc + reintegroEst;
+
+  let texto = `${nombre}, conseguí esto para vos. 🎯 `;
+  if (totalDesc > 0) {
+    texto += `Bajé tu factura de ${ARS(precioLista)} a ${ARS(totalFact)} — ${ARS(totalDesc)} de ahorro directo. `;
+  } else {
+    texto += `Tu factura del período ${periodo} quedó en ${ARS(totalFact)}. `;
+  }
+  texto += `Pagándola con Personal Pay desde la app te entra ${ARS(reintegroEst)} de reintegro (${n.reintegroFactura}%, tope ${ARS(n.topeReintegro)}/mes). `;
+  if (ahorroTotal > 0) {
+    texto += `💡 En total ahorrás aproximadamente ${ARS(ahorroTotal)}. `;
+  }
+  texto += `Además: 20% crédito extra en recargas 📱, hasta 20% en supermercados con Personal Pay 🛒 y 15% en Tienda Personal sin tope 🛍️. `;
+  if (nivel < 4) {
+    const sig = NIVELES[nivel + 1];
+    texto += `Si llegás a ${ARS(sig.consumoClientes)}/mes subís al ${sig.nombre} y tu reintegro sube al ${sig.reintegroFactura}% (tope ${ARS(sig.topeReintegro)}).`;
+  } else {
+    texto += `Estás en el nivel máximo 🏆 — aprovechá todos los beneficios.`;
+  }
+
+  return { nombre, texto };
+}
+
+function adaptarSpeechPerfil(base, inv, nivel, perfil) {
+  const { nombre, texto } = base;
+
+  const adaptaciones = {
+    positivo: (t) => t,
+    negativo: (t) => {
+      return `${nombre}, entiendo que puede haber habido inconvenientes, pero te cuento algo concreto que logré para vos. ✅ ` + t.replace(nombre + ", ", "");
+    },
+    enfadado: (t) => {
+      return `${nombre}, escuchame un segundo — tengo algo puntual que te va a interesar. 🛑 ` + t.replace(nombre + ", ", "") + ` Sé que hay cosas por mejorar y lo estamos trabajando.`;
+    },
+    confundido: (t) => {
+      return `${nombre}, te explico simple y claro. 📋 ` + t.replace(nombre + ", ", "") + ` ¿Querés que repasemos juntos algún punto?`;
+    },
+    sabelotodo: (t) => {
+      return `${nombre}, te paso los números exactos para que los evalúes. 📊 ` + t.replace(nombre + ", ", "") + ` Es información oficial de Personal Pay — cualquier detalle te lo confirmo.`;
+    },
+    hablador: (t) => {
+      // Short and punchy
+      const n = NIVELES[nivel];
+      const totalFact = inv.total || 0;
+      const totalDesc = inv.totalDescuentos || 0;
+      if (nivel === 0) {
+        return `${nombre}, rápido porque sé que tenés mucho para contar 😄: conseguí ${totalDesc > 0 ? ARS(totalDesc) + " de descuento" : "el detalle de tu factura"} en Personal. ¡Dale, seguimos!`;
+      }
+      const rei = Math.min(totalFact * (n.reintegroFactura / 100), n.topeReintegro);
+      return `${nombre}, en dos palabras 😄: factura ${ARS(totalFact)} + ${ARS(rei)} de reintegro con Personal Pay = ${ARS(totalFact - rei)} real. ¡Conviene! Después me contás todo 😉`;
+    },
+    "poco-comunicativo": (t) => {
+      const n = NIVELES[nivel];
+      const totalFact = inv.total || 0;
+      const totalDesc = inv.totalDescuentos || 0;
+      if (nivel === 0) {
+        return `${nombre}: factura ${ARS(totalFact)}${totalDesc > 0 ? ", descuento " + ARS(totalDesc) : ""}. ¿Alguna duda?`;
+      }
+      const rei = Math.min(totalFact * (n.reintegroFactura / 100), n.topeReintegro);
+      return `${nombre}: factura ${ARS(totalFact)}, reintegro Personal Pay ${ARS(rei)}. ¿Pagás desde la app? 👍`;
+    },
+    relajado: (t) => t + " 😊 Sin apuro, cualquier consulta estoy acá.",
+    controlador: (t) => {
+      return `${nombre}, te detallo todo paso a paso para que lo revises. 📌 ` + t.replace(nombre + ", ", "") + ` Cualquier punto que quieras verificar, lo chequeamos juntos.`;
+    },
+  };
+
+  const fn = adaptaciones[perfil] || adaptaciones.positivo;
+  return fn(texto);
+}
+
+// ─── Override btn-speech listeners to use perfil ──────────
+// Remove old listeners by re-querying after DOM is ready
+document.querySelectorAll(".btn-speech").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const nivel = +btn.dataset.nivel;
+    const inv   = window._lastInvoice || {};
+    const simConsumo  = parseFloat(document.getElementById("sim-consumo").value) || 0;
+    const simFactura  = parseFloat(document.getElementById("sim-factura").value) || 0;
+    if (simConsumo) inv.simConsumo = simConsumo;
+    if (simFactura && !inv.total) inv.total = simFactura;
+
+    document.querySelectorAll(".btn-speech").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    renderBenefits(nivel);
+    document.getElementById("speech-text").textContent = generarSpeechConPerfil(nivel, inv, _perfilActivo);
+    document.getElementById("speech-output").classList.remove("hidden");
+  });
 });
