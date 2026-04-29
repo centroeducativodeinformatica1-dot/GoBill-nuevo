@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#002B49" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Go-Bill · Personal Argentina</title>
+  <link rel="icon" href="assets/logo-gobill.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════
+       PANTALLA DE LOGIN
+  ══════════════════════════════════════════ -->
+  <div id="screen-auth" class="screen">
+    <div class="auth-box">
+      <img src="assets/logo-gobill.png" alt="Go-Bill" class="auth-logo" onerror="this.style.display='none'" />
+      <h1 class="auth-title">Go-Bill</h1>
+      <p class="auth-sub">Personal Argentina · Gestor de Facturas</p>
+      <button id="btn-google-login" class="btn-google">
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.7 2.4 30.2 0 24 0 14.8 0 6.9 5.4 3 13.3l7.8 6C12.9 13.3 17.9 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4 7.1-10 7.1-17z"/><path fill="#FBBC05" d="M10.8 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A24 24 0 0 0 0 24c0 3.9.9 7.5 2.5 10.7l8.3-6z"/><path fill="#34A853" d="M24 48c6.2 0 11.4-2 15.2-5.5l-7.5-5.8c-2 1.4-4.6 2.2-7.7 2.2-6.1 0-11.1-3.8-13.2-9.2l-8.3 6C6.9 42.6 14.8 48 24 48z"/></svg>
+        Ingresar con Google
+      </button>
+      <p id="auth-error" class="auth-error"></p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       APP PRINCIPAL
+  ══════════════════════════════════════════ -->
+  <div id="screen-app" class="screen hidden">
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+      <img src="assets/logo-gobill.png" alt="Go-Bill" class="nav-logo" onerror="this.style.display='none'" />
+      <span class="nav-title">Go-Bill</span>
+      <div class="nav-tabs">
+        <button class="tab-btn active" data-tab="form">Formulario</button>
+        <button class="tab-btn" data-tab="invoice">Factura</button>
+        <button class="tab-btn" data-tab="speech">Mensaje</button>
+      </div>
+      <div class="nav-user">
+        <img id="user-avatar" src="" alt="" class="user-avatar" />
+        <button id="btn-logout" class="btn-logout" title="Cerrar sesión">↩</button>
+      </div>
+    </nav>
+
+    <!-- TAB: FORMULARIO -->
+    <div id="tab-form" class="tab-content active">
+      <div class="card">
+        <h2 class="card-title">Datos del Cliente</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label>Nombre completo</label>
+            <input type="text" id="f-nombre" placeholder="Juan Pérez" />
+          </div>
+          <div class="field">
+            <label>DNI</label>
+            <input type="text" id="f-dni" placeholder="12.345.678" />
+          </div>
+          <div class="field">
+            <label>Dirección</label>
+            <input type="text" id="f-direccion" placeholder="Av. Corrientes 1234" />
+          </div>
+          <div class="field">
+            <label>Teléfono</label>
+            <input type="text" id="f-telefono" placeholder="11 1234-5678" />
+          </div>
+          <div class="field">
+            <label>Email</label>
+            <input type="email" id="f-email" placeholder="cliente@email.com" />
+          </div>
+          <div class="field">
+            <label>Nro. de cuenta</label>
+            <input type="text" id="f-cuenta" placeholder="0800-123456" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Datos de la Factura</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label>Fecha de factura</label>
+            <input type="date" id="f-fecha" />
+          </div>
+          <div class="field">
+            <label>Período facturado</label>
+            <input type="text" id="f-periodo" placeholder="Abril 2025" />
+          </div>
+          <div class="field">
+            <label>Nro. de factura</label>
+            <input type="text" id="f-nrofactura" placeholder="0001-00012345" />
+          </div>
+          <div class="field">
+            <label>Fecha de vencimiento</label>
+            <input type="date" id="f-vencimiento" />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Conceptos</h2>
+        <div id="conceptos-list"></div>
+        <button class="btn-add" id="btn-add-concepto">+ Agregar concepto</button>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Ajustes y Descuentos</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label>Descuento (%)</label>
+            <input type="number" id="f-descuento" placeholder="0" min="0" max="100" />
+          </div>
+          <div class="field">
+            <label>Crédito a favor ($)</label>
+            <input type="number" id="f-credito" placeholder="0" min="0" />
+          </div>
+          <div class="field">
+            <label>Mora / Interés ($)</label>
+            <input type="number" id="f-mora" placeholder="0" min="0" />
+          </div>
+          <div class="field">
+            <label>IVA (%)</label>
+            <input type="number" id="f-iva" placeholder="21" min="0" max="100" />
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <button class="btn-primary" id="btn-generar">Generar Factura →</button>
+      </div>
+    </div>
+
+    <!-- TAB: FACTURA -->
+    <div id="tab-invoice" class="tab-content hidden">
+      <div class="invoice-actions">
+        <button class="btn-secondary" id="btn-captura">📷 Capturar imagen</button>
+        <button class="btn-secondary" id="btn-print">🖨️ Imprimir</button>
+      </div>
+      <div id="invoice-render" class="invoice-paper">
+        <p class="invoice-empty">Completá el formulario y presioná "Generar Factura"</p>
+      </div>
+    </div>
+
+    <!-- TAB: MENSAJE -->
+    <div id="tab-speech" class="tab-content hidden">
+      <div class="card">
+        <h2 class="card-title">Mensaje de Cierre</h2>
+        <p class="speech-hint">Elegí el tono del mensaje para enviar al cliente</p>
+        <div class="speech-btns">
+          <button class="btn-speech" data-tone="formal">Formal</button>
+          <button class="btn-speech" data-tone="cordial">Cordial</button>
+          <button class="btn-speech" data-tone="urgente">Urgente</button>
+          <button class="btn-speech" data-tone="amigable">Amigable</button>
+          <button class="btn-speech" data-tone="recordatorio">Recordatorio</button>
+        </div>
+        <div id="speech-output" class="speech-output hidden">
+          <p id="speech-text"></p>
+          <button class="btn-copy" id="btn-copy-speech">📋 Copiar mensaje</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast hidden"></div>
+
+  <!-- Firebase SDK -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
