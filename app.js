@@ -6,7 +6,7 @@
 // ═══════════════════════════════════════════════════════════
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged }
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
 // ─── CONFIGURACIÓN FIREBASE ────────────────────────────────
@@ -25,7 +25,7 @@ const firebaseConfig = {
 
 const app      = initializeApp(firebaseConfig);
 const auth     = getAuth(app);
-const provider = new GoogleAuthProvider();
+
 
 // ═══════════════════════════════════════════════════════════
 //  UTILS
@@ -53,20 +53,45 @@ function showToast(msg, type = "") {
 //  AUTH
 // ═══════════════════════════════════════════════════════════
 
-document.getElementById("btn-google-login").addEventListener("click", async () => {
-  const errEl = document.getElementById("auth-error");
+// ─── LOGIN con email/contraseña ───────────────────────────
+document.getElementById("btn-login").addEventListener("click", async () => {
+  const email    = document.getElementById("auth-email").value.trim();
+  const password = document.getElementById("auth-password").value;
+  const errEl    = document.getElementById("auth-error");
   errEl.textContent = "";
+  if (!email || !password) { errEl.textContent = "Ingresá correo y contraseña."; return; }
   try {
-    await signInWithRedirect(auth, provider);
+    await signInWithEmailAndPassword(auth, email, password);
   } catch (e) {
-    errEl.textContent = "Error al iniciar sesión: " + e.message;
+    const msgs = {
+      "auth/user-not-found":    "No existe una cuenta con ese correo.",
+      "auth/wrong-password":    "Contraseña incorrecta.",
+      "auth/invalid-email":     "El correo no es válido.",
+      "auth/invalid-credential":"Correo o contraseña incorrectos.",
+      "auth/too-many-requests": "Demasiados intentos. Esperá unos minutos.",
+    };
+    errEl.textContent = msgs[e.code] || "Error: " + e.message;
   }
 });
 
-
-// Capturar resultado al volver del redirect de Google
-getRedirectResult(auth).catch((e) => {
-  if (e) document.getElementById("auth-error").textContent = "Error: " + e.message;
+// ─── CREAR CUENTA ─────────────────────────────────────────
+document.getElementById("btn-register").addEventListener("click", async () => {
+  const email    = document.getElementById("auth-email").value.trim();
+  const password = document.getElementById("auth-password").value;
+  const errEl    = document.getElementById("auth-error");
+  errEl.textContent = "";
+  if (!email || !password) { errEl.textContent = "Ingresá correo y contraseña."; return; }
+  if (password.length < 6)  { errEl.textContent = "La contraseña debe tener al menos 6 caracteres."; return; }
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+  } catch (e) {
+    const msgs = {
+      "auth/email-already-in-use": "Ya existe una cuenta con ese correo.",
+      "auth/invalid-email":        "El correo no es válido.",
+      "auth/weak-password":        "Contraseña muy débil (mínimo 6 caracteres).",
+    };
+    errEl.textContent = msgs[e.code] || "Error: " + e.message;
+  }
 });
 document.getElementById("btn-logout").addEventListener("click", async () => {
   await signOut(auth);
