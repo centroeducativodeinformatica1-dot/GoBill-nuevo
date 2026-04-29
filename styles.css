@@ -59,11 +59,11 @@ html, body {
 }
 
 .auth-logo {
-  width: 72px;
-  height: 72px;
+  width: 120px;
+  height: 120px;
   object-fit: contain;
-  margin-bottom: 16px;
-  border-radius: 16px;
+  margin-bottom: 20px;
+  border-radius: 24px;
 }
 
 .auth-title {
@@ -404,9 +404,14 @@ html, body {
 }
 
 /* Invoice internal styles */
-.inv-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 2px solid var(--dark); }
-.inv-logo { width: 80px; object-fit: contain; }
-.inv-logo-placeholder { font-size: 1.4rem; font-weight: 700; color: var(--dark); }
+.inv-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 2px solid var(--dark); gap: 16px; }
+.inv-header-top { display: flex; justify-content: center; }
+.inv-header-bottom { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+.inv-logo { width: 100px; object-fit: contain; }
+.inv-logo-placeholder { font-size: 1.6rem; font-weight: 700; color: var(--dark); }
+.inv-tipo-box { border: 2px solid var(--dark); border-radius: 8px; padding: 8px 16px; display: flex; align-items: center; gap: 10px; }
+.inv-tipo-label { font-weight: 700; font-size: .9rem; color: var(--dark); }
+.inv-tipo-x { font-size: 1.1rem; color: var(--dark); font-weight: 700; border: 2px solid var(--dark); width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
 .inv-title { text-align: right; }
 .inv-title h1 { font-size: 1.6rem; font-weight: 700; color: var(--dark); }
 .inv-title p { font-size: .8rem; color: var(--gray-600); font-family: var(--mono); }
@@ -468,7 +473,42 @@ td.lista-col { color: var(--gray-600); font-family: var(--mono); }
   border-radius: 10px;
   padding: 16px;
 }
-.speech-output p { font-size: .9rem; line-height: 1.8; color: var(--gray-800); margin-bottom: 14px; }
+.speech-output p { font-size: .9rem; line-height: 1.8; color: var(--gray-800); margin-bottom: 14px; white-space: pre-line; }
+
+.speech-msg-block {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.speech-msg-label {
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--cyan);
+  margin-bottom: 8px;
+}
+.speech-msg-text {
+  font-size: .9rem;
+  line-height: 1.8;
+  color: var(--gray-800);
+  margin-bottom: 10px !important;
+  white-space: pre-line;
+}
+.btn-copy-single {
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-size: .78rem;
+  cursor: pointer;
+  font-family: var(--font);
+  transition: background .15s;
+  color: var(--gray-600);
+}
+.btn-copy-single:hover { background: var(--gray-200); }
 
 /* Benefits card */
 .benefits-card {
@@ -731,24 +771,30 @@ td.lista-col { color: var(--gray-600); font-family: var(--mono); }
 
 .concepto-row {
   display: grid;
-  grid-template-columns: 1fr 110px 80px 90px 32px;
-  gap: 8px;
+  grid-template-columns: 1fr 100px 70px 90px 80px 32px;
+  gap: 6px;
   align-items: center;
   margin-bottom: 8px;
 }
 
 .conceptos-header {
   display: grid;
-  grid-template-columns: 1fr 110px 80px 90px 32px;
-  gap: 8px;
+  grid-template-columns: 1fr 100px 70px 90px 80px 32px;
+  gap: 6px;
   padding: 0 0 6px;
   border-bottom: 1px solid var(--gray-200);
   margin-bottom: 8px;
-  font-size: .75rem;
+  font-size: .72rem;
   font-weight: 600;
   color: var(--gray-400);
   text-transform: uppercase;
   letter-spacing: .06em;
+}
+
+.lista-manual.auto-filled {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #166534;
 }
 
 /* ═══════════════════════════════════════

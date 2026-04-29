@@ -16,7 +16,6 @@
   <div id="screen-auth" class="screen">
     <div class="auth-box">
       <img src="assets/logo-gobill.png" alt="Go-Bill" class="auth-logo" onerror="this.style.display='none'" />
-      <h1 class="auth-title">Go-Bill</h1>
       <p class="auth-sub">Personal Argentina · Gestor de Facturas</p>
       <div class="auth-form">
         <input type="email" id="auth-email" placeholder="Correo electrónico" autocomplete="email" />
@@ -95,7 +94,7 @@
       <div class="card">
         <h2 class="card-title">🏠 Hogar</h2>
         <div class="conceptos-header">
-          <span>Descripción</span><span>Precio lista</span><span>Dto %</span><span>Neto</span><span></span>
+          <span>Descripción</span><span>$ Final</span><span>Dto %</span><span>$ Lista</span><span>Neto</span><span></span>
         </div>
         <div id="conceptos-hogar"></div>
         <button class="btn-add" data-seccion="hogar">+ Agregar línea</button>
@@ -104,7 +103,7 @@
       <div class="card">
         <h2 class="card-title">📱 Móvil</h2>
         <div class="conceptos-header">
-          <span>Descripción</span><span>Precio lista</span><span>Dto %</span><span>Neto</span><span></span>
+          <span>Descripción</span><span>$ Final</span><span>Dto %</span><span>$ Lista</span><span>Neto</span><span></span>
         </div>
         <div id="conceptos-movil"></div>
         <button class="btn-add" data-seccion="movil">+ Agregar línea</button>
@@ -135,7 +134,7 @@
 
       <div class="card">
         <h2 class="card-title">Ajustes</h2>
-        <div class="form-grid form-grid-3">
+        <div class="form-grid form-grid-2">
           <div class="field">
             <label>Crédito a favor ($)</label>
             <input type="number" id="f-credito" placeholder="0" min="0" />
@@ -143,10 +142,6 @@
           <div class="field">
             <label>Mora / Interés ($)</label>
             <input type="number" id="f-mora" placeholder="0" min="0" />
-          </div>
-          <div class="field">
-            <label>IVA (%)</label>
-            <input type="number" id="f-iva" placeholder="21" min="0" max="100" />
           </div>
         </div>
       </div>
@@ -223,6 +218,36 @@
     <!-- TAB: MENSAJE -->
     <div id="tab-speech" class="tab-content hidden">
       <div class="card">
+        <h2 class="card-title">Generar Mensaje</h2>
+        <p class="speech-hint">Seleccioná el perfil del cliente y su nivel para armar el mensaje de retención</p>
+        <div class="speech-section-label">Perfil del cliente</div>
+        <div class="speech-perfiles">
+          <button class="btn-perfil active" data-perfil="positivo">😊 Positivo</button>
+          <button class="btn-perfil" data-perfil="negativo">😤 Negativo</button>
+          <button class="btn-perfil" data-perfil="enfadado">🤬 Enfadado</button>
+          <button class="btn-perfil" data-perfil="confundido">😕 Confundido</button>
+          <button class="btn-perfil" data-perfil="sabelotodo">🤓 Sabelotodo</button>
+          <button class="btn-perfil" data-perfil="hablador">💬 Hablador</button>
+          <button class="btn-perfil" data-perfil="poco-comunicativo">🤐 Poco comunicativo</button>
+          <button class="btn-perfil" data-perfil="relajado">😎 Relajado</button>
+          <button class="btn-perfil" data-perfil="controlador">🎯 Controlador</button>
+        </div>
+        <div class="speech-section-label" style="margin-top:16px">Nivel Personal Pay</div>
+        <div class="speech-btns">
+          <button class="btn-speech" data-nivel="0">Sin nivel</button>
+          <button class="btn-speech" data-nivel="1">Nivel 1</button>
+          <button class="btn-speech" data-nivel="2">Nivel 2</button>
+          <button class="btn-speech" data-nivel="3">Nivel 3</button>
+          <button class="btn-speech" data-nivel="4">Nivel 4</button>
+        </div>
+        <div id="speech-output" class="speech-output hidden">
+          <div class="speech-benefits" id="speech-benefits"></div>
+          <div id="speech-messages"></div>
+          <button class="btn-copy" id="btn-copy-speech">📋 Copiar mensaje</button>
+        </div>
+      </div>
+
+      <div class="card">
         <h2 class="card-title">Simulador Personal Pay</h2>
         <p class="speech-hint">Ingresá el consumo mensual del cliente para ver a qué nivel accede y cuánto ahorra</p>
         <div class="sim-input-row">
@@ -287,37 +312,6 @@
           <div id="sim-ahorro-total" class="sim-ahorro-total"></div>
           <div id="sim-detalle" class="sim-detalle"></div>
         </div>
-      </div>
-
-      <div class="card">
-        <h2 class="card-title">Generar Mensaje</h2>
-        <p class="speech-hint">Seleccioná el perfil del cliente y su nivel para armar el mensaje de retención</p>
-        <div class="speech-section-label">Perfil del cliente</div>
-        <div class="speech-perfiles">
-          <button class="btn-perfil active" data-perfil="positivo">😊 Positivo</button>
-          <button class="btn-perfil" data-perfil="negativo">😤 Negativo</button>
-          <button class="btn-perfil" data-perfil="enfadado">🤬 Enfadado</button>
-          <button class="btn-perfil" data-perfil="confundido">😕 Confundido</button>
-          <button class="btn-perfil" data-perfil="sabelotodo">🤓 Sabelotodo</button>
-          <button class="btn-perfil" data-perfil="hablador">💬 Hablador</button>
-          <button class="btn-perfil" data-perfil="poco-comunicativo">🤐 Poco comunicativo</button>
-          <button class="btn-perfil" data-perfil="relajado">😎 Relajado</button>
-          <button class="btn-perfil" data-perfil="controlador">🎯 Controlador</button>
-        </div>
-        <div class="speech-section-label" style="margin-top:16px">Nivel Personal Pay</div>
-        <div class="speech-btns">
-          <button class="btn-speech" data-nivel="0">Sin nivel</button>
-          <button class="btn-speech" data-nivel="1">Nivel 1</button>
-          <button class="btn-speech" data-nivel="2">Nivel 2</button>
-          <button class="btn-speech" data-nivel="3">Nivel 3</button>
-          <button class="btn-speech" data-nivel="4">Nivel 4</button>
-        </div>
-        <div id="speech-output" class="speech-output hidden">
-          <div class="speech-benefits" id="speech-benefits"></div>
-          <p id="speech-text"></p>
-          <button class="btn-copy" id="btn-copy-speech">📋 Copiar mensaje</button>
-        </div>
-      </div>
     </div>
   </div>
 

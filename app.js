@@ -173,8 +173,8 @@ document.querySelectorAll(".btn-ciclo").forEach(btn => {
 // ═══════════════════════════════════════════════════════════
 
 const secciones = {
-  hogar: [{ desc: "", lista: "", pct: "" }],
-  movil: [{ desc: "", lista: "", pct: "" }],
+  hogar: [{ desc: "", lista: "", final: "", pct: "" }],
+  movil: [{ desc: "", lista: "", final: "", pct: "" }],
 };
 
 function renderSeccion(sec) {
@@ -184,25 +184,58 @@ function renderSeccion(sec) {
     const row  = document.createElement("div");
     row.className = "concepto-row";
     const lista = parseFloat(c.lista) || 0;
+    const final = parseFloat(c.final) || 0;
     const pct   = parseFloat(c.pct)   || 0;
-    const neto  = lista - lista * pct / 100;
+
+    // If precio final is set, precio lista = final / (1 - pct/100)
+    // If precio lista is set, neto = lista * (1 - pct/100)
+    let listaCalc = lista;
+    let finalCalc = final;
+    if (final > 0 && pct > 0 && lista === 0) {
+      listaCalc = final / (1 - pct / 100);
+    } else if (lista > 0) {
+      finalCalc = lista - lista * pct / 100;
+    }
+
     row.innerHTML =
       `<input type="text" placeholder="Descripción" value="${c.desc}" data-sec="${sec}" data-i="${i}" data-k="desc" />` +
-      `<input type="number" placeholder="$ 0" value="${c.lista}" data-sec="${sec}" data-i="${i}" data-k="lista" class="monto" />` +
+      `<input type="number" placeholder="$ Precio final" value="${c.final || ''}" data-sec="${sec}" data-i="${i}" data-k="final" class="monto" title="Precio final (app contención)" />` +
       `<input type="number" placeholder="%" value="${c.pct}" min="0" max="100" data-sec="${sec}" data-i="${i}" data-k="pct" class="monto" />` +
-      `<span class="concepto-neto">${lista > 0 ? ARS(neto) : "—"}</span>` +
+      `<input type="number" placeholder="$ Lista" value="${c.lista || ''}" data-sec="${sec}" data-i="${i}" data-k="lista" class="monto lista-manual" title="Precio de lista (manual o auto-calculado)" />` +
+      `<span class="concepto-neto">${(listaCalc > 0 || finalCalc > 0) ? ARS(final > 0 && lista === 0 ? final : finalCalc) : "—"}</span>` +
       `<button class="btn-remove-concepto" data-sec="${sec}" data-i="${i}" title="Eliminar">✕</button>`;
     list.appendChild(row);
-  });
 
-  list.querySelectorAll("input").forEach(inp => {
-    inp.addEventListener("change", e => {
-      const s = e.target.dataset.sec;
-      const i = +e.target.dataset.i;
-      const k = e.target.dataset.k;
-      secciones[s][i][k] = e.target.value;
-      renderSeccion(s);
-    });
+    // Auto-fill lista when final+pct change
+    const inputFinal = row.querySelector('[data-k="final"]');
+    const inputLista = row.querySelector('[data-k="lista"]');
+    const inputPct   = row.querySelector('[data-k="pct"]');
+
+    function recalc() {
+      const f = parseFloat(inputFinal.value) || 0;
+      const l = parseFloat(inputLista.value) || 0;
+      const p = parseFloat(inputPct.value)   || 0;
+      if (f > 0 && p > 0 && l === 0) {
+        // auto-calc lista
+        const autoLista = f / (1 - p / 100);
+        inputLista.value = autoLista.toFixed(2);
+        inputLista.classList.add("auto-filled");
+        secciones[sec][i].lista = autoLista.toFixed(2);
+      } else if (l > 0) {
+        inputLista.classList.remove("auto-filled");
+        // clear final if lista is entered manually
+        if (f === 0) {
+          inputFinal.value = "";
+          secciones[sec][i].final = "";
+        }
+      }
+      renderSeccion(sec);
+    }
+
+    inputFinal.addEventListener("change", e => { secciones[sec][i].final = e.target.value; recalc(); });
+    inputLista.addEventListener("change", e => { secciones[sec][i].lista = e.target.value; secciones[sec][i].final = ""; recalc(); });
+    inputPct.addEventListener("change",   e => { secciones[sec][i].pct   = e.target.value; recalc(); });
+    row.querySelector('[data-k="desc"]').addEventListener("change", e => { secciones[sec][i].desc = e.target.value; });
   });
 
   list.querySelectorAll(".btn-remove-concepto").forEach(btn => {
@@ -210,7 +243,7 @@ function renderSeccion(sec) {
       const s = e.target.dataset.sec;
       const i = +e.target.dataset.i;
       if (secciones[s].length > 1) { secciones[s].splice(i, 1); renderSeccion(s); }
-      else { secciones[s][0] = { desc:"", lista:"", pct:"" }; renderSeccion(s); }
+      else { secciones[s][0] = { desc:"", lista:"", final:"", pct:"" }; renderSeccion(s); }
     });
   });
 }
@@ -307,11 +340,9 @@ function calcularFactura(data) {
   const subtotal  = precioLista - totalDescuentos;
   const credito   = parseFloat(data.credito) || 0;
   const mora      = parseFloat(data.mora)    || 0;
-  const ivaRate   = (parseFloat(data.iva) || 21) / 100;
-  const ivaAmt    = subtotal * ivaRate;
-  const total     = subtotal + ivaAmt + mora - credito;
+  const total     = subtotal + mora - credito;
 
-  return { precioLista, descuentosPct, descuentoCT, totalDescuentos, subtotal, credito, mora, ivaAmt, ivaRate, total, hogar, movil, adicionalesLista, adicionalesDesc };
+  return { precioLista, descuentosPct, descuentoCT, totalDescuentos, subtotal, credito, mora, ivaAmt: 0, ivaRate: 0, total, hogar, movil, adicionalesLista, adicionalesDesc };
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -373,11 +404,19 @@ document.getElementById("btn-generar").addEventListener("click", () => {
 
   const html = `
     <div class="inv-header">
-      <img src="assets/logo-personal.png" alt="Personal" class="inv-logo"
-           onerror="this.outerHTML='<span class=inv-logo-placeholder>Personal</span>'" />
-      <div class="inv-title">
-        <h1>FACTURA</h1>
-        <p class="inv-nro">${data.nrofactura || "—"}</p>
+      <div class="inv-header-top">
+        <img src="assets/logo-personal.png" alt="Personal" class="inv-logo"
+             onerror="this.outerHTML='<span class=inv-logo-placeholder>Personal</span>'" />
+      </div>
+      <div class="inv-header-bottom">
+        <div class="inv-tipo-box">
+          <span class="inv-tipo-label">FACTURA B</span>
+          <span class="inv-tipo-x">✕</span>
+        </div>
+        <div class="inv-title">
+          <h1>FACTURA</h1>
+          <p class="inv-nro">${data.nrofactura || "—"}</p>
+        </div>
       </div>
     </div>
 
@@ -411,7 +450,6 @@ document.getElementById("btn-generar").addEventListener("click", () => {
       ${totalDescuentos > 0 ? `<div class="inv-total-row green"><span>Total descuentos</span><span>−${ARS(totalDescuentos)}</span></div>` : ""}
       ${descuentoCT > 0 ? `<div class="inv-total-row green desc-ct"><span>↳ Desc. Conexión Total</span><span>−${ARS(descuentoCT)}</span></div>` : ""}
       <div class="inv-total-row"><span>Subtotal</span><span>${ARS(subtotal)}</span></div>
-      ${ivaRate > 0 ? `<div class="inv-total-row"><span>IVA (${data.iva}%)</span><span>${ARS(ivaAmt)}</span></div>` : ""}
       ${mora > 0 ? `<div class="inv-total-row"><span>Mora / Interés</span><span>${ARS(mora)}</span></div>` : ""}
       ${credito > 0 ? `<div class="inv-total-row"><span>Crédito a favor</span><span>−${ARS(credito)}</span></div>` : ""}
       <div class="inv-total-row inv-total-final"><span>TOTAL A PAGAR</span><span>${ARS(total)}</span></div>
@@ -605,7 +643,29 @@ document.querySelectorAll(".btn-perfil").forEach(btn => {
     if (nivelBtn) {
       const nivel = +nivelBtn.dataset.nivel;
       const inv   = window._lastInvoice || {};
-      document.getElementById("speech-text").textContent = generarSpeechConPerfil(nivel, inv, _perfilActivo);
+      const partes = generarSpeechConPerfil(nivel, inv, _perfilActivo);
+      const msgsEl = document.getElementById("speech-messages");
+      msgsEl.innerHTML = "";
+      if (partes.length === 1) {
+        msgsEl.innerHTML = `<p class="speech-msg-text">${partes[0]}</p>`;
+      } else {
+        partes.forEach((txt, i) => {
+          msgsEl.innerHTML += `
+            <div class="speech-msg-block">
+              <div class="speech-msg-label">Mensaje ${i+1}</div>
+              <p class="speech-msg-text">${txt}</p>
+              <button class="btn-copy-single" data-idx="${i}">📋 Copiar</button>
+            </div>`;
+        });
+        msgsEl.querySelectorAll(".btn-copy-single").forEach(b => {
+          b.addEventListener("click", async () => {
+            const idx = +b.dataset.idx;
+            const t = msgsEl.querySelectorAll(".speech-msg-text")[idx].textContent;
+            try { await navigator.clipboard.writeText(t); showToast("Mensaje copiado", "success"); }
+            catch { showToast("No se pudo copiar", ""); }
+          });
+        });
+      }
     }
   });
 });
@@ -647,51 +707,127 @@ function generarSpeechConPerfil(nivel, inv, perfil) {
   const totalDesc   = inv.totalDescuentos || 0;
   const precioLista = inv.precioLista || 0;
   const periodo     = inv.periodo || "este período";
+  const n           = NIVELES[nivel];
+  const rei         = n ? Math.min(totalFact * (n.reintegroFactura / 100), n.topeReintegro) : 0;
 
-  let base;
-  if (nivel === 0) {
-    base = totalDesc > 0
-      ? `${nombre}, conseguí ${ARS(totalDesc)} de descuento en tu factura de Personal. 💰 Bajaste de ${ARS(precioLista)} a ${ARS(totalFact)} para ${periodo}. Cualquier consulta, estoy.`
-      : `${nombre}, acá está tu factura de Personal del período ${periodo}. Total: ${ARS(totalFact)}. Avisame si tenés consultas.`;
-  } else {
-    const n = NIVELES[nivel];
-    const rei = Math.min(totalFact * (n.reintegroFactura / 100), n.topeReintegro);
-    const ahorro = totalDesc + rei;
-    base = `${nombre}, conseguí esto para vos. 🎯 `;
-    if (totalDesc > 0) base += `Bajé tu factura de ${ARS(precioLista)} a ${ARS(totalFact)} — ${ARS(totalDesc)} de ahorro directo. `;
-    else               base += `Tu factura de ${periodo} quedó en ${ARS(totalFact)}. `;
-    base += `Pagándola con Personal Pay te entra ${ARS(rei)} de reintegro (${n.reintegroFactura}%, tope ${ARS(n.topeReintegro)}/mes). `;
-    if (ahorro > 0) base += `💡 Ahorro total estimado: ${ARS(ahorro)}. `;
-    base += `Además: 20% extra en recargas 📱, hasta 20% en supermercados 🛒, 15% en Tienda Personal sin tope 🛍️. `;
-    if (nivel < 4) {
-      const sig = NIVELES[nivel + 1];
-      base += `Si llegás a ${ARS(sig.consumoClientes)}/mes subís al ${sig.nombre} → ${sig.reintegroFactura}% de reintegro (tope ${ARS(sig.topeReintegro)}).`;
-    } else {
-      base += `Estás en el nivel máximo 🏆 — aprovechá todos los beneficios.`;
-    }
-  }
+  // Helper: formato fecha aprox de vencimiento
+  const vencHint = inv.vencimiento ? `con vencimiento aproximado el ${fechaStr(inv.vencimiento)}` : "en tu próxima factura";
 
-  const n = NIVELES[nivel];
-  const totalFact2 = totalFact;
-  const rei2 = n ? Math.min(totalFact2 * (n.reintegroFactura / 100), n.topeReintegro) : 0;
+  // ── TEMPLATES POR PERFIL ──────────────────────────────────
 
-  const adaptaciones = {
-    positivo: () => base,
-    negativo: () => `${nombre}, entiendo que puede haber habido inconvenientes, pero te cuento algo concreto que logré. ✅ ` + base.replace(nombre + ", ", ""),
-    enfadado: () => `${nombre}, escuchame un segundo — tengo algo puntual que te va a interesar. 🛑 ` + base.replace(nombre + ", ", "") + ` Sé que hay cosas por mejorar y lo trabajamos.`,
-    confundido: () => `${nombre}, te explico simple y claro. 📋 ` + base.replace(nombre + ", ", "") + ` ¿Querés que repasemos algún punto juntos?`,
-    sabelotodo: () => `${nombre}, te paso los números exactos para que los evalúes. 📊 ` + base.replace(nombre + ", ", "") + ` Es información oficial — cualquier detalle te lo confirmo.`,
-    hablador: () => nivel === 0
-      ? `${nombre}, rápido porque sé que tenés mucho para contar 😄: conseguí ${totalDesc > 0 ? ARS(totalDesc) + " de descuento" : "el detalle de tu factura"} en Personal. ¡Dale, seguimos!`
-      : `${nombre}, en dos palabras 😄: factura ${ARS(totalFact2)} + ${ARS(rei2)} de reintegro = ${ARS(totalFact2 - rei2)} real. ¡Conviene! Después me contás todo 😉`,
-    "poco-comunicativo": () => nivel === 0
-      ? `${nombre}: factura ${ARS(totalFact2)}${totalDesc > 0 ? ", descuento " + ARS(totalDesc) : ""}. ¿Alguna duda?`
-      : `${nombre}: factura ${ARS(totalFact2)}, reintegro Personal Pay ${ARS(rei2)}. ¿Pagás desde la app? 👍`,
-    relajado: () => base + " 😊 Sin apuro, cualquier consulta estoy acá.",
-    controlador: () => `${nombre}, te detallo todo paso a paso para que lo revises. 📌 ` + base.replace(nombre + ", ", "") + ` Cualquier punto que quieras verificar, lo chequeamos juntos.`,
+  const tpl = {
+
+    positivo: () => {
+      if (nivel === 0 && totalDesc > 0) return [
+        `¡Excelente noticia, ${nombre}! 🎉\n¡Te conseguí una promo especial para que sigas disfrutando del servicio! 😎`,
+        `📋 *Resumen de tu beneficio:*\n🔥 Descuento aplicado: ${ARS(totalDesc)}\n✅ Total a abonar: ${ARS(totalFact)}\n\nSi te interesa confirmame y lo cargo en sistema — lo vas a ver reflejado ${vencHint}. 🙂`
+      ];
+      if (nivel === 0) return [
+        `${nombre}, acá está tu factura de Personal del período ${periodo}. Total: ${ARS(totalFact)}. Cualquier consulta estoy a tu disposición. 😊`
+      ];
+      return [
+        `¡Hola ${nombre}! Tengo muy buenas noticias para vos. 🎁\nTeniendo en cuenta tu historial, te conseguí una promoción especial que creo que te va a encantar.`,
+        `📊 *Lo que logramos para vos:*\n${totalDesc > 0 ? `💸 Descuento aplicado: ${ARS(totalDesc)}\n✅ Tu factura queda en: ${ARS(totalFact)}\n` : `📄 Factura ${periodo}: ${ARS(totalFact)}\n`}💳 Pagándola con *Personal Pay* te entra un reintegro de *${ARS(rei)}* (${n.reintegroFactura}%, tope ${ARS(n.topeReintegro)}/mes).\n\nEso significa que tu costo real queda en aprox. ${ARS(Math.max(0, totalFact - rei))}. 🤩`,
+        `🎯 *Y encima tenés estos beneficios adicionales:*\n📱 20% de crédito extra en recargas semanales\n🛒 Hasta 20% en supermercados con Personal Pay\n🛍️ Hasta 15% en Tienda Personal sin tope mensual\n${nivel < 4 ? `\n▲ Si llegás a ${ARS(NIVELES[nivel+1].consumoClientes)}/mes subís al ${NIVELES[nivel+1].nombre} con ${NIVELES[nivel+1].reintegroFactura}% de reintegro.` : '\n⭐ ¡Ya estás en el nivel máximo!'}\n\nSi te parece bien confirmame y lo cargo ahora mismo. 💪`
+      ];
+    },
+
+    negativo: () => {
+      if (nivel === 0) return [
+        `${nombre}, entiendo perfectamente tu situación y quiero ser honesto/a con vos. ✅\nMirá lo que pude conseguirte concreto:`
+        + (totalDesc > 0 ? `\n\n🔥 Descuento: ${ARS(totalDesc)}\n✅ Total a pagar: ${ARS(totalFact)}\n\nEstoy acá para ayudarte — si necesitás algo más no dudes en avisarme.` : `\n\n📄 Tu factura del período ${periodo}: ${ARS(totalFact)}. Si hay algo que no te cierra, hablemos.`)
+      ];
+      return [
+        `${nombre}, entiendo que estás disconforme, y te agradezco que me lo digas — eso me ayuda a buscar la mejor solución para vos. 🙏\nTe cuento lo que pude conseguir de concreto:`,
+        `✅ *Resultado para tu cuenta:*\n${totalDesc > 0 ? `💸 Ahorro directo: ${ARS(totalDesc)}\n📄 Factura ajustada: ${ARS(totalFact)}\n` : `📄 Factura ${periodo}: ${ARS(totalFact)}\n`}💳 Con Personal Pay sumás ${ARS(rei)} más de reintegro (${n.reintegroFactura}%).\n\nSon números concretos, no palabras. Lo que me pedís que mejore lo anoto — trabajamos para eso.`
+      ];
+    },
+
+    enfadado: () => {
+      if (nivel === 0) return [
+        `${nombre}, escuchame un momento. Sé que hay situaciones que no estuvieron bien, y lo entiendo. 🛑\nPero mirá lo que tengo para mostrarte hoy, que es concreto:`
+        + (totalDesc > 0 ? `\n\n🔥 Descuento conseguido: ${ARS(totalDesc)}\n✅ Lo que pagás: ${ARS(totalFact)}\n\nEso es ahorro real. Cualquier otro tema lo trabajamos juntos.` : `\n\n📄 Factura ${periodo}: ${ARS(totalFact)}. Decime qué más necesitás.`)
+      ];
+      return [
+        `${nombre}, escuchame — sé que estás molesto/a y es válido. Pero antes de cualquier decisión quiero que veas esto porque me parece importante. 🛑`,
+        `💡 *Lo que tengo para vos hoy:*\n${totalDesc > 0 ? `🔥 Bajé tu factura de ${ARS(precioLista)} → ${ARS(totalFact)} (ahorro: ${ARS(totalDesc)})\n` : `📄 Factura ${periodo}: ${ARS(totalFact)}\n`}💳 Personal Pay te devuelve ${ARS(rei)} (${n.reintegroFactura}%)\n📱 20% extra en recargas + 20% en super\n\n¿Lo evaluamos juntos? Sé que hay cosas para mejorar y me hago responsable. Pero este beneficio te conviene aprovecharlo ahora.`
+      ];
+    },
+
+    confundido: () => {
+      if (nivel === 0) return [
+        `${nombre}, te explico de manera sencilla para que quede 100% claro. 📋\n`
+        + (totalDesc > 0
+          ? `📌 Precio original: ${ARS(precioLista)}\n📌 Con el descuento que te apliqué: ${ARS(totalFact)}\n📌 Ahorrás: ${ARS(totalDesc)}\n\nCualquier duda que te quede, preguntame con confianza — estoy para aclararte todo.`
+          : `📌 Tu factura de ${periodo} es de ${ARS(totalFact)}.\n\n¿Hay algún punto que no te queda claro? Me decís y lo repasamos juntos.`)
+      ];
+      return [
+        `${nombre}, te explico paso a paso para que no quede ninguna duda. 📋`,
+        `📌 *Paso 1 — Tu factura:*\n${totalDesc > 0 ? `Precio de lista: ${ARS(precioLista)}\nDescuento aplicado: -${ARS(totalDesc)}\nTotal que pagás: ${ARS(totalFact)}` : `Total período ${periodo}: ${ARS(totalFact)}`}`,
+        `📌 *Paso 2 — Personal Pay:*\nSi pagás con Personal Pay en la app, te devuelven ${ARS(rei)} (eso es el ${n.reintegroFactura}% de reintegro).\n\nO sea, de los ${ARS(totalFact)} que pagás, te vuelven ${ARS(rei)} — tu costo real es ${ARS(Math.max(0, totalFact - rei))}.\n\n¿Quedó claro? ¿Querés que repasemos algo?`
+      ];
+    },
+
+    sabelotodo: () => {
+      if (nivel === 0) return [
+        `${nombre}, te paso los números exactos para que los evalúes. 📊\n`
+        + (totalDesc > 0
+          ? `Precio de lista: ${ARS(precioLista)}\nDescuento aplicado (${Math.round(totalDesc/precioLista*100)}%): -${ARS(totalDesc)}\nTotal neto: ${ARS(totalFact)}\n\nEs información oficial — cualquier detalle adicional te lo confirmo.`
+          : `Factura período ${periodo}: ${ARS(totalFact)}. Para cualquier validación que necesites, estoy.`)
+      ];
+      return [
+        `${nombre}, te paso la info exacta para que la analices como corresponde. 📊`,
+        `📈 *Datos concretos de tu cuenta:*\n${totalDesc > 0 ? `• Precio lista: ${ARS(precioLista)}\n• Descuento aplicado: -${ARS(totalDesc)} (${precioLista > 0 ? Math.round(totalDesc/precioLista*100) : 0}%)\n• Total factura: ${ARS(totalFact)}\n` : `• Factura ${periodo}: ${ARS(totalFact)}\n`}• Nivel Personal Pay: ${n.nombre}\n• Reintegro facturas: ${n.reintegroFactura}% (tope ${ARS(n.topeReintegro)}/mes)\n• Reintegro estimado: ${ARS(rei)}\n• Costo efectivo: ${ARS(Math.max(0, totalFact - rei))}\n\nTodo verificable en la app oficial de Personal. Cualquier cifra que quieras cotejar, te confirmo.`
+      ];
+    },
+
+    hablador: () => {
+      if (nivel === 0) return [
+        `${nombre}, en dos palabras porque sé que tenés mucho para contar 😄: `
+        + (totalDesc > 0 ? `te conseguí ${ARS(totalDesc)} de descuento, pagás ${ARS(totalFact)}. ¡Dale que hay más para hablar!` : `factura ${ARS(totalFact)}, todo en orden. ¡Seguimos!`)
+      ];
+      return [
+        `${nombre}, rapidísimo porque sé que sos de hablar 😄 — escuchame estos segundos que te convienen:`,
+        `⚡ En resumen: factura ${ARS(totalFact)} ${totalDesc > 0 ? `(ya con ${ARS(totalDesc)} de descuento)` : ""} + reintegro Personal Pay ${ARS(rei)} = costo real ${ARS(Math.max(0, totalFact - rei))}.\n\nEso sin contar las recargas, el super y la tienda. ¡Conviene! Y ahora sí, contame todo 😉`
+      ];
+    },
+
+    "poco-comunicativo": () => {
+      if (nivel === 0) return [
+        `${nombre}: factura ${ARS(totalFact)}${totalDesc > 0 ? `, descuento ${ARS(totalDesc)}` : ""}. ¿Alguna duda?`
+      ];
+      return [
+        `${nombre}:\n• Factura: ${ARS(totalFact)}\n• Reintegro Personal Pay: ${ARS(rei)}\n• Costo neto: ${ARS(Math.max(0, totalFact - rei))}\n\n¿Pagás desde la app? 👍`
+      ];
+    },
+
+    relajado: () => {
+      if (nivel === 0) return [
+        `${nombre}, sin apuro te cuento. 😊\n`
+        + (totalDesc > 0 ? `Te apliqué un descuento de ${ARS(totalDesc)}, así que pagás ${ARS(totalFact)} en vez de ${ARS(precioLista)}. Cuando quieras charlamos cualquier otra consulta.` : `Tu factura de ${periodo} es ${ARS(totalFact)}. Cualquier cosa que necesites, acá estoy.`)
+      ];
+      return [
+        `${nombre}, cuando tengas un momento te cuento algo que conseguí para vos. 😊\nNo hay apuro, pero creo que te va a interesar.`,
+        `${totalDesc > 0 ? `Logré bajarte la factura de ${ARS(precioLista)} a ${ARS(totalFact)}` : `Tu factura de ${periodo} es ${ARS(totalFact)}`} y si la pagás con Personal Pay te vuelven ${ARS(rei)} de reintegro.\n\nO sea, terminás pagando alrededor de ${ARS(Math.max(0, totalFact - rei))} en la práctica. No está nada mal, ¿no? 😄\n\nCualquier duda que surja, acá estoy sin problemas.`
+      ];
+    },
+
+    controlador: () => {
+      if (nivel === 0) return [
+        `${nombre}, te detallo todo para que tengas el control completo de la situación. 📌\n`
+        + (totalDesc > 0
+          ? `1. Precio original: ${ARS(precioLista)}\n2. Descuento aplicado: -${ARS(totalDesc)}\n3. Total final: ${ARS(totalFact)}\n\nCualquier punto que quieras verificar lo chequeamos juntos.`
+          : `1. Factura período ${periodo}: ${ARS(totalFact)}\n\nTodo en orden. ¿Querés revisar algún detalle?`)
+      ];
+      return [
+        `${nombre}, te paso el detalle completo para que puedas revisar cada punto. 📌`,
+        `📋 *Detalle de factura:*\n${totalDesc > 0 ? `1. Precio lista: ${ARS(precioLista)}\n2. Descuento: -${ARS(totalDesc)}\n3. Total factura: ${ARS(totalFact)}\n` : `1. Factura ${periodo}: ${ARS(totalFact)}\n`}4. Nivel Personal Pay: ${n.nombre}\n5. % Reintegro: ${n.reintegroFactura}%\n6. Tope reintegro: ${ARS(n.topeReintegro)}/mes\n7. Reintegro estimado: ${ARS(rei)}\n8. Costo efectivo final: ${ARS(Math.max(0, totalFact - rei))}`,
+        `✅ *Beneficios adicionales confirmados:*\n• 20% crédito extra en recargas semanales\n• Hasta 20% en supermercados con Personal Pay\n• Hasta 15% en Tienda Personal sin tope\n${nivel < 4 ? `• Próximo nivel: ${NIVELES[nivel+1].nombre} desde ${ARS(NIVELES[nivel+1].consumoClientes)}/mes → ${NIVELES[nivel+1].reintegroFactura}% reintegro` : '• Nivel máximo — todos los beneficios activados'}\n\nCualquier número que quieras verificar, lo revisamos juntos sin problema.`
+      ];
+    },
   };
 
-  return (adaptaciones[perfil] || adaptaciones.positivo)();
+  return ((tpl[perfil] || tpl.positivo)()) ;
 }
 
 document.querySelectorAll(".btn-speech").forEach(btn => {
@@ -707,13 +843,36 @@ document.querySelectorAll(".btn-speech").forEach(btn => {
     btn.classList.add("active");
 
     renderBenefits(nivel);
-    document.getElementById("speech-text").textContent = generarSpeechConPerfil(nivel, inv, _perfilActivo);
+    const partes = generarSpeechConPerfil(nivel, inv, _perfilActivo);
+    const msgsEl = document.getElementById("speech-messages");
+    msgsEl.innerHTML = "";
+    if (partes.length === 1) {
+      msgsEl.innerHTML = `<p class="speech-msg-text">${partes[0]}</p>`;
+    } else {
+      partes.forEach((txt, i) => {
+        msgsEl.innerHTML += `
+          <div class="speech-msg-block">
+            <div class="speech-msg-label">Mensaje ${i+1}</div>
+            <p class="speech-msg-text">${txt}</p>
+            <button class="btn-copy-single" data-idx="${i}">📋 Copiar</button>
+          </div>`;
+      });
+      msgsEl.querySelectorAll(".btn-copy-single").forEach(b => {
+        b.addEventListener("click", async () => {
+          const idx = +b.dataset.idx;
+          const t = msgsEl.querySelectorAll(".speech-msg-text")[idx].textContent;
+          try { await navigator.clipboard.writeText(t); showToast("Mensaje copiado", "success"); }
+          catch { showToast("No se pudo copiar", ""); }
+        });
+      });
+    }
     document.getElementById("speech-output").classList.remove("hidden");
   });
 });
 
 document.getElementById("btn-copy-speech").addEventListener("click", async () => {
-  const txt = document.getElementById("speech-text").textContent;
+  const msgs = document.querySelectorAll("#speech-messages .speech-msg-text");
+  const txt = Array.from(msgs).map((el, i) => msgs.length > 1 ? `Mensaje ${i+1}:\n${el.textContent}` : el.textContent).join("\n\n");
   try {
     await navigator.clipboard.writeText(txt);
     showToast("Mensaje copiado", "success");
