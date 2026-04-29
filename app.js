@@ -220,7 +220,7 @@ document.getElementById("btn-generar").addEventListener("click", () => {
 
   if (!data.nombre) { showToast("Ingresá el nombre del cliente", "error"); return; }
 
-  const { subtotal, descuento, credito, mora, ivaAmt, ivaRate, total } = calcularFactura(data);
+  const { precioLista, totalDescuentos, subtotal, credito, mora, ivaAmt, ivaRate, total } = calcularFactura(data);
 
   const filasConceptos = conceptos
     .filter(c => c.desc || c.lista)
