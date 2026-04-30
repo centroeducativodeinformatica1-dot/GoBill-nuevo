@@ -407,21 +407,15 @@ document.getElementById("btn-generar").addEventListener("click", () => {
       <div class="inv-watermark">NO VÁLIDO COMO FACTURA</div>
 
       <div class="inv-header">
-        <div class="inv-header-top">
-          <img src="assets/logo-personal.png" alt="Personal" class="inv-logo"
-               onerror="this.outerHTML='<span class=inv-logo-placeholder>Personal</span>'" />
-        </div>
-        <div class="inv-header-bottom">
-          <div class="inv-tipo-col">
-            <div class="inv-tipo-box">
-              <span class="inv-tipo-x">✕</span>
-            </div>
-            <span class="inv-tipo-label">FACTURA B</span>
+        <img src="assets/logo-personal.png" alt="Personal" class="inv-logo"
+             onerror="this.outerHTML='<span class=inv-logo-placeholder>Personal</span>'" />
+        <div class="inv-tipo-col">
+          <div class="inv-tipo-box">
+            <span class="inv-tipo-x">✕</span>
           </div>
-          <div class="inv-nro-col">
-            <p class="inv-nro">${data.nrofactura || "—"}</p>
-          </div>
+          <span class="inv-tipo-label">FACTURA</span>
         </div>
+        ${data.nrofactura ? `<p class="inv-nro">${data.nrofactura}</p>` : ""}
       </div>
 
     <div class="inv-meta">
