@@ -409,9 +409,11 @@ document.getElementById("btn-generar").addEventListener("click", () => {
              onerror="this.outerHTML='<span class=inv-logo-placeholder>Personal</span>'" />
       </div>
       <div class="inv-header-bottom">
-        <div class="inv-tipo-box">
+        <div class="inv-tipo-col">
+          <div class="inv-tipo-box">
+            <span class="inv-tipo-x">✕</span>
+          </div>
           <span class="inv-tipo-label">FACTURA B</span>
-          <span class="inv-tipo-x">✕</span>
         </div>
         <div class="inv-title">
           <h1>FACTURA</h1>
@@ -784,18 +786,6 @@ function generarSpeechConPerfil(nivel, inv, perfil) {
       return [
         `${nombre}, te paso la info exacta para que la analices como corresponde. 📊`,
         `📈 *Datos concretos de tu cuenta:*\n${totalDesc > 0 ? `• Precio lista: ${ARS(precioLista)}\n• Descuento aplicado: -${ARS(totalDesc)} (${precioLista > 0 ? Math.round(totalDesc/precioLista*100) : 0}%)\n• Total factura: ${ARS(totalFact)}\n` : `• Factura ${periodo}: ${ARS(totalFact)}\n`}• Nivel Personal Pay: ${n.nombre}\n• Reintegro facturas: ${n.reintegroFactura}% (tope ${ARS(n.topeReintegro)}/mes)\n• Reintegro estimado: ${ARS(rei)}\n• Costo efectivo: ${ARS(Math.max(0, totalFact - rei))}\n\nTodo verificable en la app oficial de Personal. Cualquier cifra que quieras cotejar, te confirmo.`
-      ];
-    },
-
-    hablador: () => {
-      if (nivel === 0) return [
-        `${nombre}, escuchame — sé que tenés mucho para contarme y te voy a dar todo el tiempo 😄\nPero primero dejame mostrarte algo rápido que creo que te va a gustar:`,
-        `${totalDesc > 0 ? `🔥 Conseguí bajarte la factura de ${ARS(precioLista)} a ${ARS(totalFact)}\n💸 Ahorro directo: ${ARS(totalDesc)}` : `📄 Tu factura del período ${periodo}: ${ARS(totalFact)}`}\n\n👉 ¿Te sirve así? Si está bien, lo cargo y después me contás todo lo que necesitás — estoy acá para escucharte 😊`
-      ];
-      return [
-        `${nombre}, rapidísimo porque sé que sos de hablar 😄 — escuchame estos segundos que te convienen:`,
-        `${totalDesc > 0 ? `🔥 Ya te bajé la factura: de ${ARS(precioLista)} → ${ARS(totalFact)}\n💸 Ahorro real: ${ARS(totalDesc)}\n\nEso ya es tuyo, lo aplico ahora.` : `📄 Tu factura del período ${periodo}: ${ARS(totalFact)}`}\n\n👉 ¿Tiene sentido lo que te digo hasta acá?`,
-        `💳 *Y encima hay un beneficio que no te podés perder — Personal Pay:*\n¿Sabés que podés pagar la factura desde la app y te vuelve ${ARS(rei)} de reintegro? Sí, plata que te depositan de vuelta automáticamente (${n.reintegroFactura}% de lo que pagás).\n\n📱 20% extra en recargas semanales\n🛒 Hasta 20% en supermercados con Personal Pay\n🛍️ Hasta 15% en Tienda Personal\n\nO sea, pagás menos, te vuelve más, y tenés todo incluido. ¡Conviene! Y ahora sí, contame todo 😉`
       ];
     },
 
