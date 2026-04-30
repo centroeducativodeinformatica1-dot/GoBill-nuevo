@@ -403,24 +403,26 @@ document.getElementById("btn-generar").addEventListener("click", () => {
     ? `<tr class="sec-header"><td colspan="4">🎬 Adicionales</td></tr>${filasAdicionales}` : "";
 
   const html = `
-    <div class="inv-header">
-      <div class="inv-header-top">
-        <img src="assets/logo-personal.png" alt="Personal" class="inv-logo"
-             onerror="this.outerHTML='<span class=inv-logo-placeholder>Personal</span>'" />
-      </div>
-      <div class="inv-header-bottom">
-        <div class="inv-tipo-col">
-          <div class="inv-tipo-box">
-            <span class="inv-tipo-x">✕</span>
+    <div class="inv-paper-wrap">
+      <div class="inv-watermark">NO VÁLIDO COMO FACTURA</div>
+
+      <div class="inv-header">
+        <div class="inv-header-top">
+          <img src="assets/logo-personal.png" alt="Personal" class="inv-logo"
+               onerror="this.outerHTML='<span class=inv-logo-placeholder>Personal</span>'" />
+        </div>
+        <div class="inv-header-bottom">
+          <div class="inv-tipo-col">
+            <div class="inv-tipo-box">
+              <span class="inv-tipo-x">✕</span>
+            </div>
+            <span class="inv-tipo-label">FACTURA B</span>
           </div>
-          <span class="inv-tipo-label">FACTURA B</span>
-        </div>
-        <div class="inv-title">
-          <h1>FACTURA</h1>
-          <p class="inv-nro">${data.nrofactura || "—"}</p>
+          <div class="inv-nro-col">
+            <p class="inv-nro">${data.nrofactura || "—"}</p>
+          </div>
         </div>
       </div>
-    </div>
 
     <div class="inv-meta">
       <div class="inv-meta-col">
@@ -458,6 +460,7 @@ document.getElementById("btn-generar").addEventListener("click", () => {
     </div>
 
     <div class="inv-footer">Personal Argentina · Telecomunicaciones · go-bill.vercel.app</div>
+    </div>
   `;
 
   document.getElementById("invoice-render").innerHTML = html;

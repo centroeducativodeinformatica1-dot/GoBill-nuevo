@@ -405,7 +405,22 @@ html, body {
 }
 
 /* Invoice internal styles */
-.inv-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 2px solid var(--dark); gap: 16px; }
+.inv-paper-wrap { position: relative; overflow: hidden; }
+.inv-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-35deg);
+  font-size: 2.8rem;
+  font-weight: 900;
+  color: rgba(0, 43, 73, 0.06);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: 2px;
+  z-index: 0;
+}
+.inv-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 2px solid var(--dark); gap: 16px; position: relative; z-index: 1; }
 .inv-header-top { display: flex; justify-content: center; }
 .inv-header-bottom { display: flex; justify-content: space-between; align-items: center; width: 100%; }
 .inv-logo { width: 140px; object-fit: contain; }
@@ -414,9 +429,8 @@ html, body {
 .inv-tipo-box { border: 2px solid var(--dark); border-radius: 6px; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; }
 .inv-tipo-x { font-size: 1.2rem; color: var(--dark); font-weight: 700; }
 .inv-tipo-label { font-weight: 600; font-size: .82rem; color: var(--dark); letter-spacing: .3px; }
-.inv-title { text-align: right; }
-.inv-title h1 { font-size: 1.4rem; font-weight: 700; color: var(--dark); }
-.inv-title p { font-size: .8rem; color: var(--gray-600); font-family: var(--mono); }
+.inv-nro-col { text-align: right; }
+.inv-nro-col .inv-nro { font-size: .85rem; color: var(--gray-600); font-family: var(--mono); }
 
 .inv-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
 .inv-meta-block { }
