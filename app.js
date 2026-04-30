@@ -276,7 +276,7 @@ function renderAdicionales() {
     row.className = "adicional-row";
     row.innerHTML =
       `<span class="adicional-nombre">` +
-        (a.logo ? `<img src="${a.logo}" class="adicional-logo" alt="${a.nombre}" onerror="this.style.display='none'" />` : "") +
+        (a.logo ? `<img src="${a.logo}" class="adicional-logo" alt="${a.nombre}" title="${a.nombre}" onerror="this.style.display='none'" />` : `<span class="adicional-logo-placeholder"></span>`) +
         `<input type="text" placeholder="Nombre" value="${a.nombre}" data-i="${i}" data-k="nombre" class="adicional-name-input" />` +
       `</span>` +
       `<input type="number" placeholder="$ lista" value="${a.lista}" data-i="${i}" data-k="lista" class="monto" />` +
