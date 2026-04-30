@@ -350,7 +350,7 @@ function calcularFactura(data) {
 // ═══════════════════════════════════════════════════════════
 
 document.getElementById("btn-generar").addEventListener("click", () => {
-  const g = (id) => document.getElementById(id).value.trim();
+  const g = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ""; };
   const data = {
     nombre:      g("f-nombre"),
     cuenta:      g("f-cuenta"),
