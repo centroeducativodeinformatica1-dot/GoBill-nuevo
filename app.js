@@ -840,6 +840,8 @@ function generarSpeechConPerfil(nivel, inv, perfil) {
         `🎯 *Frases de cierre final:*\n\n"Si querés, lo activo ahora y ya impacta en la próxima factura — ¿lo hacemos?"\n"Es la forma más rápida de bajar tu factura desde ya — ¿lo aplico?"\n"Lo dejo cargado y listo, ¿de acuerdo?"\n"¿Arrancamos con esto?"\n\n🔁 *Si el cliente duda:*\n"Igual lo anoto para que no se te vaya la promo — estas condiciones son temporales."\n"No te comprometés a nada, solo te muestro los números — ¿seguimos?"`
       ];
     },
+
+    controlador: () => {
       if (nivel === 0) return [
         `${nombre}, te detallo todo para que tengas el control completo de la situación. 📌\n`
         + (totalDesc > 0
