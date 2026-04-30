@@ -461,6 +461,11 @@ document.getElementById("btn-generar").addEventListener("click", () => {
   document.getElementById("invoice-render").innerHTML = html;
   window._lastInvoice = { ...data, total, totalDescuentos, precioLista, periodo: data.periodo };
 
+  // Si no hay conceptos (total = 0), avisamos pero igual generamos
+  if (total === 0 && precioLista === 0) {
+    showToast("Factura generada sin conceptos — podés agregar ítems si querés", "");
+  }
+
   // Switch to invoice tab
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
@@ -727,7 +732,7 @@ function generarSpeechConPerfil(nivel, inv, perfil) {
       ];
       return [
         `¡Hola ${nombre}! Tengo muy buenas noticias para vos. 🎁\nTeniendo en cuenta tu historial, te conseguí una promoción especial que creo que te va a encantar.`,
-        `📊 *Lo que logramos para vos:*\n${totalDesc > 0 ? `💸 Descuento aplicado: ${ARS(totalDesc)}\n✅ Tu factura queda en: ${ARS(totalFact)}\n` : `📄 Factura ${periodo}: ${ARS(totalFact)}\n`}💳 Pagándola con *Personal Pay* te entra un reintegro de *${ARS(rei)}* (${n.reintegroFactura}%, tope ${ARS(n.topeReintegro)}/mes).\n\nEso significa que tu costo real queda en aprox. ${ARS(Math.max(0, totalFact - rei))}. 🤩`,
+        `📊 *Lo que logramos para vos:*\n${totalDesc > 0 ? `💸 Descuento aplicado: ${ARS(totalDesc)}\n✅ Tu factura queda en: ${ARS(totalFact)}\n` : `📄 Factura ${periodo}: ${ARS(totalFact)}\n`}💳 *¿Tenés Personal Pay?* Si pagás con la app, te entra un reintegro automático de *${ARS(rei)}* (${n.reintegroFactura}% de tu factura — son ${ARS(rei)} que te depositan de vuelta sin hacer nada especial).\n\nEso significa que tu costo real queda en aprox. ${ARS(Math.max(0, totalFact - rei))}. 🤩`,
         `🎯 *Y encima tenés estos beneficios adicionales:*\n📱 20% de crédito extra en recargas semanales\n🛒 Hasta 20% en supermercados con Personal Pay\n🛍️ Hasta 15% en Tienda Personal sin tope mensual\n${nivel < 4 ? `\n▲ Si llegás a ${ARS(NIVELES[nivel+1].consumoClientes)}/mes subís al ${NIVELES[nivel+1].nombre} con ${NIVELES[nivel+1].reintegroFactura}% de reintegro.` : '\n⭐ ¡Ya estás en el nivel máximo!'}\n\nSi te parece bien confirmame y lo cargo ahora mismo. 💪`
       ];
     },
@@ -743,14 +748,15 @@ function generarSpeechConPerfil(nivel, inv, perfil) {
       ];
     },
 
-    enfadado: () => {
+    disconforme: () => {
       if (nivel === 0) return [
-        `${nombre}, escuchame un momento. Sé que hay situaciones que no estuvieron bien, y lo entiendo. 🛑\nPero mirá lo que tengo para mostrarte hoy, que es concreto:`
-        + (totalDesc > 0 ? `\n\n🔥 Descuento conseguido: ${ARS(totalDesc)}\n✅ Lo que pagás: ${ARS(totalFact)}\n\nEso es ahorro real. Cualquier otro tema lo trabajamos juntos.` : `\n\n📄 Factura ${periodo}: ${ARS(totalFact)}. Decime qué más necesitás.`)
+        `${nombre}, entiendo completamente lo que me estás comentando 🙏\nY la verdad, si yo estuviera en tu lugar también estaría molesto/a.\nQuedate tranquilo/a que lo vamos a resolver 💪`,
+        `Mientras reviso tu caso, quiero ayudarte también por el lado del costo, porque veo que hay margen para mejorar.\n${totalDesc > 0 ? `🎁 Ya te apliqué un descuento de ${ARS(totalDesc)}\n💰 Pasarías a pagar ${ARS(totalFact)} en vez de ${ARS(precioLista)}\n\nLa idea es que, además de solucionarte el inconveniente, también sientas el beneficio en la factura.\n👉 ¿Te parece bien? Lo dejo aplicado ahora y ya te impacta en la próxima factura` : `📄 Tu factura del período ${periodo} es de ${ARS(totalFact)}\n\nDecime cuál es el inconveniente específico y lo resolvemos juntos ahora 💪`}`
       ];
       return [
-        `${nombre}, escuchame — sé que estás molesto/a y es válido. Pero antes de cualquier decisión quiero que veas esto porque me parece importante. 🛑`,
-        `💡 *Lo que tengo para vos hoy:*\n${totalDesc > 0 ? `🔥 Bajé tu factura de ${ARS(precioLista)} → ${ARS(totalFact)} (ahorro: ${ARS(totalDesc)})\n` : `📄 Factura ${periodo}: ${ARS(totalFact)}\n`}💳 Personal Pay te devuelve ${ARS(rei)} (${n.reintegroFactura}%)\n📱 20% extra en recargas + 20% en super\n\n¿Lo evaluamos juntos? Sé que hay cosas para mejorar y me hago responsable. Pero este beneficio te conviene aprovecharlo ahora.`
+        `${nombre}, entiendo completamente lo que me estás comentando 🙏\nY la verdad, si yo estuviera en tu lugar también estaría molesto/a. Quedate tranquilo/a que lo vamos a resolver 💪`,
+        `Mientras reviso tu caso, quiero ayudarte también por el lado del costo.\n\n${totalDesc > 0 ? `🎁 Te apliqué un descuento de ${ARS(totalDesc)}\n💰 Pasás a pagar ${ARS(totalFact)} en vez de ${ARS(precioLista)}` : `📄 Tu factura del período ${periodo}: ${ARS(totalFact)}`}\n\n¿Te sirve así? La idea es que sientas el beneficio en la factura, además de resolver lo que me planteás.\n👉 Lo dejo aplicado ahora así ya impacta en la próxima factura y avanzamos con la solución`,
+        `💳 *Y hay algo más que quiero que conozcas — Personal Pay:*\nSi pagás la factura desde la app Personal Pay, te entra un reintegro automático de ${ARS(rei)} (${n.reintegroFactura}% de tu factura).\n\n📱 20% de crédito extra en recargas semanales\n🛒 Hasta 20% en supermercados\n🛍️ Hasta 15% en Tienda Personal\n\nO sea: bajamos la factura, la solucionamos, y encima la app te devuelve plata. ¿Vamos bien hasta acá?`
       ];
     },
 
@@ -783,21 +789,22 @@ function generarSpeechConPerfil(nivel, inv, perfil) {
 
     hablador: () => {
       if (nivel === 0) return [
-        `${nombre}, en dos palabras porque sé que tenés mucho para contar 😄: `
-        + (totalDesc > 0 ? `te conseguí ${ARS(totalDesc)} de descuento, pagás ${ARS(totalFact)}. ¡Dale que hay más para hablar!` : `factura ${ARS(totalFact)}, todo en orden. ¡Seguimos!`)
+        `${nombre}, escuchame — sé que tenés mucho para contarme y te voy a dar todo el tiempo 😄\nPero primero dejame mostrarte algo rápido que creo que te va a gustar:`,
+        `${totalDesc > 0 ? `🔥 Conseguí bajarte la factura de ${ARS(precioLista)} a ${ARS(totalFact)}\n💸 Ahorro directo: ${ARS(totalDesc)}` : `📄 Tu factura del período ${periodo}: ${ARS(totalFact)}`}\n\n👉 ¿Te sirve así? Si está bien, lo cargo y después me contás todo lo que necesitás — estoy acá para escucharte 😊`
       ];
       return [
         `${nombre}, rapidísimo porque sé que sos de hablar 😄 — escuchame estos segundos que te convienen:`,
-        `⚡ En resumen: factura ${ARS(totalFact)} ${totalDesc > 0 ? `(ya con ${ARS(totalDesc)} de descuento)` : ""} + reintegro Personal Pay ${ARS(rei)} = costo real ${ARS(Math.max(0, totalFact - rei))}.\n\nEso sin contar las recargas, el super y la tienda. ¡Conviene! Y ahora sí, contame todo 😉`
+        `${totalDesc > 0 ? `🔥 Ya te bajé la factura: de ${ARS(precioLista)} → ${ARS(totalFact)}\n💸 Ahorro real: ${ARS(totalDesc)}\n\nEso ya es tuyo, lo aplico ahora.` : `📄 Tu factura del período ${periodo}: ${ARS(totalFact)}`}\n\n👉 ¿Tiene sentido lo que te digo hasta acá?`,
+        `💳 *Y encima hay un beneficio que no te podés perder — Personal Pay:*\n¿Sabés que podés pagar la factura desde la app y te vuelve ${ARS(rei)} de reintegro? Sí, plata que te depositan de vuelta automáticamente (${n.reintegroFactura}% de lo que pagás).\n\n📱 20% extra en recargas semanales\n🛒 Hasta 20% en supermercados con Personal Pay\n🛍️ Hasta 15% en Tienda Personal\n\nO sea, pagás menos, te vuelve más, y tenés todo incluido. ¡Conviene! Y ahora sí, contame todo 😉`
       ];
     },
 
     "poco-comunicativo": () => {
       if (nivel === 0) return [
-        `${nombre}: factura ${ARS(totalFact)}${totalDesc > 0 ? `, descuento ${ARS(totalDesc)}` : ""}. ¿Alguna duda?`
+        `${nombre}: factura ${ARS(totalFact)}${totalDesc > 0 ? `, con descuento de ${ARS(totalDesc)}` : ""}. ¿Alguna duda?`
       ];
       return [
-        `${nombre}:\n• Factura: ${ARS(totalFact)}\n• Reintegro Personal Pay: ${ARS(rei)}\n• Costo neto: ${ARS(Math.max(0, totalFact - rei))}\n\n¿Pagás desde la app? 👍`
+        `${nombre}:\n• Factura: ${ARS(totalFact)}\n• Reintegro Personal Pay: ${ARS(rei)}\n• Costo neto: ${ARS(Math.max(0, totalFact - rei))}\n\n¿Pagás desde la app? Con Personal Pay ese reintegro te entra automático 👍`
       ];
     },
 
@@ -812,7 +819,27 @@ function generarSpeechConPerfil(nivel, inv, perfil) {
       ];
     },
 
-    controlador: () => {
+    bonus: () => {
+      // Speech especial para refuerzo de cierre / segunda oportunidad
+      const extraPersonalPay = nivel > 0
+        ? `\n\n💳 *Recordá — Personal Pay:*\nPagás desde la app y te depositan ${ARS(rei)} de reintegro automático. Es plata que te vuelve sin trámite, sin papeles. Solo pagás y ya.`
+        : "";
+      if (nivel === 0) return [
+        `${nombre}, antes de terminar quiero que sepas algo 💡\n\nNo es solo la factura — es todo lo que Personal tiene para vos que todavía no estás aprovechando al máximo.\n\n🎁 Si en algún momento querés revisar tu plan o ver si hay algo que ajustar, estoy acá para eso.\n\n👉 ¿Hay algo más en lo que te pueda ayudar hoy?`
+      ];
+      return [
+        `${nombre}, antes de cerrar quiero que te quede una cosa clara 💡`,
+        `Todo lo que te mostré hoy es real y ya está disponible para vos:\n\n${totalDesc > 0 ? `✅ Descuento de ${ARS(totalDesc)} — factura en ${ARS(totalFact)}\n` : `📄 Factura ${periodo}: ${ARS(totalFact)}\n`}💳 Personal Pay: reintegro de ${ARS(rei)} automático por pagar desde la app\n📱 20% extra en recargas semanales\n🛒 Hasta 20% en supermercados\n🛍️ Hasta 15% en Tienda Personal${extraPersonalPay}\n\n👉 No hay nada que perder y sí bastante que ganar. ¿Lo dejamos activado?`
+      ];
+    },
+
+    microcierres: () => {
+      // Herramienta de apoyo: frases de microcierre para usar durante la conversación
+      return [
+        `💬 *Microcierres — usalos durante la charla:*\n\n"¿Te sirve así?"\n"¿Vamos bien hasta acá?"\n"¿Tiene sentido lo que te digo?"\n"¿Lo vemos juntos?"\n"¿Querés que lo aplico ahora?"\n"¿Te parece?"\n"¿Arrancamos?"\n\n👉 Metelos entre mensaje y mensaje para que el cliente vaya diciendo pequeños "sí" antes del cierre final. Cada "sí" intermedio hace más fácil el "sí" definitivo.`,
+        `🎯 *Frases de cierre final:*\n\n"Si querés, lo activo ahora y ya impacta en la próxima factura — ¿lo hacemos?"\n"Es la forma más rápida de bajar tu factura desde ya — ¿lo aplico?"\n"Lo dejo cargado y listo, ¿de acuerdo?"\n"¿Arrancamos con esto?"\n\n🔁 *Si el cliente duda:*\n"Igual lo anoto para que no se te vaya la promo — estas condiciones son temporales."\n"No te comprometés a nada, solo te muestro los números — ¿seguimos?"`
+      ];
+    },
       if (nivel === 0) return [
         `${nombre}, te detallo todo para que tengas el control completo de la situación. 📌\n`
         + (totalDesc > 0

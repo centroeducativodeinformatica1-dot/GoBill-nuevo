@@ -754,6 +754,22 @@ td.lista-col { color: var(--gray-600); font-family: var(--mono); }
   color: var(--white);
 }
 
+.btn-perfil-bonus {
+  border-color: #f59e0b;
+  color: #b45309;
+  background: #fffbeb;
+}
+.btn-perfil-bonus:hover {
+  border-color: #d97706;
+  color: #92400e;
+  background: #fef3c7;
+}
+.btn-perfil-bonus.active {
+  background: #d97706;
+  border-color: #d97706;
+  color: var(--white);
+}
+
 /* ═══════════════════════════════════════
    CONCEPTO NETO INLINE
 ═══════════════════════════════════════ */
