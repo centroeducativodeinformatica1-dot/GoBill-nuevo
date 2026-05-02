@@ -896,3 +896,169 @@ document.getElementById("btn-copy-speech").addEventListener("click", async () =>
     showToast("No se pudo copiar — seleccionalo manualmente", "");
   }
 });
+
+// ═══════════════════════════════════════════════════════════
+//  PORTOUT SPEECHES
+// ═══════════════════════════════════════════════════════════
+
+const PORTOUT_SPEECHES = {
+  decidido: {
+    label: "🔴 Cliente decidido a irse",
+    msgs: [
+      `@Nombre, entiendo que estés evaluando opciones como Claro por los GB, es totalmente válido.\n\nEn tu caso puntual, ya tenés un beneficio alto activo (como la duplicación de datos), y si te cambiás lo perdés automáticamente.\n\nLo importante acá no es solo cuántos GB tenés hoy, sino cuánto terminás pagando en el tiempo y qué estabilidad tenés en la factura.\n\nAntes de que tomes la decisión, dejame ajustarte el plan para mejorarte el precio o sumarte un beneficio adicional sin que pierdas lo que ya tenés.`,
+      `📱Precio Lista:   XXXXXX$\n🔥Descuento XX%:   XXX0$\n-----------------------------------------------------\nTe consulto, ¿contás con servicio hogar ya sea internet o TV con nosotros? porque en caso de disponerlo, unificando la factura, contarías con un descuento de entre $4000 a $12000 mensuales además de todos los beneficios de ser un cliente unificado\nTe comento los beneficios de tener todos nuestros servicios en una factura unificada😎📃:\n▶️Descuento exclusivo en tu factura de: de $4000 a $12000💸\n▶️1GB de regalo y duplicación de GB en tu celu, activándolo desde la App 📳\n▶️WiFi Zone: 30 días gratuitos de red Wifi en la calle 📶\n▶️Flow Pass: 10GB para ver el mejor contenido de Flow en tu celu sin gastar los datos de tu abono 📱📺\n▶️WiFi Pass: 5GB mensuales para usar tu celu como módem 💻📡\n▶️WiFi BackUp: En caso de tener incidencia en tu internet, te activamos 50GB por 24h 💻🔧\n▶️Pack Mundo: 2GB de roaming activable 1 vez por año 😍🌎\n▶️Tienda Personal: %10 de descuento en nuestra tienda 🛒🎊`,
+      `✅ Pude conseguirte un buen descuento para ayudarte a seguir ahorrando y es el siguiente:\n■ Promo con el 70% por 6 meses\n■ Tu ciclo cierra el 14 cuando se emite la próxima factura lo verás reflejado.\n■ Precio final de $24837\n\n❗❗ Sería desde Marzo a Agosto\nSi te interesa esta promo confirmame así te las cargo en sistema y lo vas a ver reflejado en la próxima factura.💪🏼\n\n✅Precio Final: XXXXX$ 🫰🏻\nTOTAL GBs x Mes:   X GBs 📶\n-----------------------------------------------------\nCon los Gigas adicionales que te brindamos vas a tener mucho más para navegar`
+    ]
+  },
+  indeciso: {
+    label: "🟡 Cliente indeciso",
+    msgs: [
+      `@Nombre, está perfecto que compares con Claro, hoy todos miramos eso.\n\nPero hay algo clave: vos ya tenés beneficios activos que un cliente nuevo no tiene, como la duplicación de GB y descuentos por servicios.\n\nSi te cambiás, empezás desde cero. En cambio acá puedo trabajar sobre lo que ya tenés para mejorarte el precio o el plan.\n\n¿Te parece si lo ajustamos y vemos cómo dejarte una opción más conveniente sin perder beneficios?`,
+      `Entiendo lo que me comentas, pero si lo que buscás es reducir tus costos, lo que más te conviene es mantener tu abono. Con esta promo vas a pagar menos que la factura anterior.\n\nEn cambio, con prepago se van a seguir actualizando las tarifas, recargas y compra de packs🙏\n\nY comparando con los valores de prepago:\nInternet por día: $XX  SMS: $XX\nEl minuto de llamada: $XX\n\nEsto quiere decir que suponiendo que gastes la cuota MÍNIMA diaria de internet (que se gasta muuy rápido), ya estaríamos hablando de $XX. Sin realizar ninguna llamada o mensaje de texto. ❗\n\nEn cambio con la promo que te ofrecí antes XX, estaríamos hablando de $xx diarios y tiene xGB de internet (+ los otros x de regalo por un año), con llamadas/SMS ilimitados. Es más conveniente conservar tu abono 😉  ¿aplicamos la promoción?`
+    ]
+  },
+  enojado: {
+    label: "🔵 Cliente enojado",
+    msgs: [
+      `@Nombre, entiendo la molestia, y es lógico que mires alternativas como Claro.\n\nPero antes de que tomes esa decisión, quiero que sepas que no estás en el mismo punto que un cliente nuevo: vos ya tenés beneficios importantes activos.\n\nLo que puedo hacer ahora es mejorarte lo que tenés, ya sea en precio o en condiciones, para que realmente te convenga quedarte.\n\nSi te parece, lo resolvemos ahora y evitás perder todo lo que ya tenés.`,
+      `Comprendo, entiendo la situación y te comento que tengo una nueva oferta exclusiva para vos. 💙\n\nTe comento lo que estás abonando por la línea, tiene un plan de xGB de internet, con:\n✅ WhatsApp gratis\n✅ Llamadas y SMS ilimitados a cualquier personal y otras compañías.\n✅ xGB para navegar\na un valor de $XX x 6 meses con un descuento aplicado del XX%, teniendo en cuenta que el precio de lista de $XX\n\nLo que puedo ofrecerte para que pagues menos es una promoción por 6 meses y te quedaría a un valor de $XXX 💥 con un descuento del XX%🤩, ¿te interesa esta promoción para que tengas los mismos beneficios pero pagues menos? ❤️`
+    ]
+  },
+  precio: {
+    label: "🟢 Cliente que busca precio",
+    msgs: [
+      `@Nombre, entiendo que estés buscando una opción más económica, sobre todo viendo propuestas como Claro.\n\nEn tu caso ya tenés un plan con beneficios incluidos, entonces no se trata de sumarte más GB, sino de optimizar lo que estás pagando.\n\nPuedo ajustarte el plan para que pagues menos o tengas mejores condiciones, sin que pierdas los beneficios actuales.\n\n¿Querés que lo veamos y te deje una opción más conveniente?`,
+      `📱Precio Lista:   XXXXXX$\n🔥Descuento XX%:   XXX0$\n-----------------------------------------------------\n✅ Pude conseguirte un buen descuento para ayudarte a seguir ahorrando:\n■ Promo con el 70% por 6 meses\n■ Precio final de $24837\n❗❗ Sería desde Marzo a Agosto\n\nSi te interesa esta promo confirmame así te las cargo en sistema y lo vas a ver reflejado en la próxima factura.💪🏼\n\n✅Precio Final: XXXXX$ 🫰🏻\nTOTAL GBs x Mes:   X GBs 📶\n-----------------------------------------------------\nCon los Gigas adicionales que te brindamos vas a tener mucho más para navegar`
+    ]
+  },
+  tips: {
+    label: "💡 Tips para abordar PortOUT",
+    msgs: [
+      `🟢 1. APERTURA (empatía + foco)\n@Nombre, entiendo totalmente que estés evaluando opciones como Claro, hoy todos buscamos más por menos.\n(PAUSA – dejalo hablar)`,
+      `🟡 2. DETECCIÓN (elegí según lo que diga)\n👉 Si dice "me dan más GB"\nPerfecto, es lógico que mires eso. ¿Lo que más te interesa es tener más datos o pagar menos por lo que usás?\n\n👉 Si dice "es más barato"\nBien, o sea que el punto principal hoy es el precio, ¿no?\n\n👉 Si está enojado\nEntiendo, decime qué fue lo que te hizo pensar en cambiarte así lo resolvemos bien.\n\n(IMPORTANTE: dejalo responder → eso te da control de la conversación)`,
+      `🔵 3. REPOSICIONAR VALOR (sin vender lo que ya tiene)\nBien, en tu caso hay algo clave: vos ya tenés beneficios activos que un cliente nuevo no tiene.\nSi te cambiás a Claro, empezás desde cero y perdés esas condiciones.\n\n🟠 4. CONTRAOFERTA (acá vas directo y concreto)\n👉 elegí UNA según sistema:\n\n* Si podés bajar precio:\nLo que puedo hacer ahora es ajustarte el plan para que pagues menos manteniendo todo lo que ya tenés.\n\n* Si podés mejorar plan:\nPuedo mejorarte el plan con mejores condiciones sin que pierdas tus beneficios actuales.\n\n* Si es mix:\nTe puedo mejorar tanto el precio como el plan, pero manteniendo todo lo que ya tenés activo.`,
+      `🔴 5. CIERRE GUIADO (clave)\nAntes de que tomes la decisión de cambiarte, dejame ajustártelo ahora y ves cómo te queda. Si no te convence, seguís con tu idea, pero por lo menos decidís con algo mejor sobre la mesa.\n\n🔄 RESPUESTAS RÁPIDAS (para interrupciones)\n❗ "Igual me conviene Claro"\nPuede parecerlo de entrada, pero ahí arrancás sin beneficios. Acá ya estás en ventaja, y la idea es mejorarte desde ese punto.\n\n❗ "No quiero vueltas, quiero dar de baja"\nTe entiendo, y lo resolvemos. Antes de hacerlo, dame 30 segundos para dejarte una mejor opción y que decidas con eso.\n\n❗ "Solo quiero pagar menos"\nPerfecto, vamos directo a eso entonces: dejame ajustarte el plan y vemos cuánto podemos bajarlo ahora.\n\n🎯 CLAVE FINAL\n• Usá frases cortas\n• Hacé pausas (dejá que el cliente hable)\n• No expliques de más → guiá la decisión\n• Siempre cerrá con acción ("lo vemos ahora", "te lo ajusto")`
+    ]
+  },
+  cierre: {
+    label: "🔥 Cierre Ultra Agresivo (RETENCIÓN)",
+    msgs: [
+      `🎯 MOMENTO: cliente ya dijo que se va / quiere la baja\n\n@Nombre, te entiendo, y si después de esto te sigue conveniendo Claro, avanzamos con la baja sin problema.\n\nPero antes, te voy a ser directo: hoy te estás yendo perdiendo beneficios que ya tenés activos, y eso no lo vas a recuperar después.\n\n(micro pausa, no le des espacio a cortar)`,
+      `⚡ GOLPE DE REALIDAD\nAllá empezás de cero. Acá ya tenés ventajas que yo sí puedo mejorar ahora mismo.\n\n💣 PROPUESTA FIRME (sin dudar)\nEn este momento te ajusto el plan para que pagues menos / mejores condiciones, manteniendo todo lo que ya tenés.\n\nNo estás atado a nada raro: simplemente te vas con algo mejor que lo que tenés hoy.\n\n🧠 CONTROL DE DECISIÓN\nHagamos esto: lo aplico ahora, ves cómo te queda… y si no te convence, seguimos con la baja.\n(esto baja la resistencia porque no siente compromiso)`,
+      `🔴 CIERRE FINAL (no pregunta abierta)\nTe lo ajusto ahora y lo revisamos juntos, ¿sí?\n(NO digas "¿querés?" → asumí avance)\n\n🧨 SI INTENTA ESCAPAR IGUAL\n❗ "No, igual quiero la baja"\nDale, lo gestiono. Pero sería una lástima que te vayas sin ver la mejora que puedo aplicarte en este momento. Es ahora cuando tenés ventaja como cliente.\n\n❗ "Es que allá es mejor"\nPuede parecerlo de entrada. Pero estás comparando una promo de ingreso con un servicio donde ya tenés beneficios activos. Dejame empatarte eso desde acá antes de que tomes la decisión.\n\n❗ "No tengo tiempo"\nEs rápido, en menos de un minuto te lo dejo aplicado y lo ves reflejado. Después decidís tranquilo.`
+    ]
+  }
+};
+
+// Render portout
+let _portoutActivo = null;
+
+document.querySelectorAll(".btn-portout").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const tipo = btn.dataset.portout;
+    _portoutActivo = tipo;
+    document.querySelectorAll(".btn-portout").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    const data = PORTOUT_SPEECHES[tipo];
+    if (!data) return;
+
+    const msgsEl = document.getElementById("portout-messages");
+    msgsEl.innerHTML = "";
+
+    if (data.msgs.length === 1) {
+      msgsEl.innerHTML = `<div class="portout-msg-block"><p class="portout-msg-text">${data.msgs[0]}</p></div>`;
+    } else {
+      data.msgs.forEach((txt, i) => {
+        msgsEl.innerHTML += `
+          <div class="portout-msg-block">
+            <div class="portout-msg-label">Mensaje ${i+1}</div>
+            <p class="portout-msg-text">${txt}</p>
+            <button class="btn-copy-single" data-idx="${i}" style="margin-top:8px">📋 Copiar</button>
+          </div>`;
+      });
+      msgsEl.querySelectorAll(".btn-copy-single").forEach(b => {
+        b.addEventListener("click", async () => {
+          const idx = +b.dataset.idx;
+          const t = msgsEl.querySelectorAll(".portout-msg-text")[idx].textContent;
+          try { await navigator.clipboard.writeText(t); showToast("Mensaje copiado", "success"); }
+          catch { showToast("No se pudo copiar", ""); }
+        });
+      });
+    }
+    document.getElementById("portout-output").classList.remove("hidden");
+  });
+});
+
+document.getElementById("btn-copy-portout").addEventListener("click", async () => {
+  const msgs = document.querySelectorAll("#portout-messages .portout-msg-text");
+  const txt = Array.from(msgs).map((el, i) => msgs.length > 1 ? `Mensaje ${i+1}:\n${el.textContent}` : el.textContent).join("\n\n");
+  try {
+    await navigator.clipboard.writeText(txt);
+    showToast("Mensajes copiados", "success");
+  } catch {
+    showToast("No se pudo copiar", "");
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+//  GENERAR MÁS SPEECH (via Anthropic API)
+// ═══════════════════════════════════════════════════════════
+
+document.getElementById("btn-more-speech").addEventListener("click", async () => {
+  const btn = document.getElementById("btn-more-speech");
+  const msgsEl = document.getElementById("portout-messages");
+  const tipo = _portoutActivo;
+  if (!tipo) return;
+
+  btn.disabled = true;
+  btn.textContent = "⏳ Generando...";
+
+  const data = PORTOUT_SPEECHES[tipo];
+  const contexto = data ? data.msgs.join("\n\n") : "";
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        system: "Sos un experto en retención de clientes de telefonía móvil en Argentina, específicamente para Personal Argentina. Generás scripts de ventas y retención en español argentino (vos, tuteo), usando emojis moderadamente. Respondés SOLO con el script, sin explicaciones ni introducción.",
+        messages: [{
+          role: "user",
+          content: `Generá 2 mensajes alternativos adicionales para el escenario: "${data.label}".\n\nBasate en este contexto pero con variaciones creativas y diferentes enfoques:\n${contexto}\n\nRespondé solo con los mensajes, separados por el texto "---MENSAJE 2---" para distinguirlos.`
+        }]
+      })
+    });
+    const result = await response.json();
+    const texto = result.content?.map(i => i.text || "").join("") || "";
+    const partes = texto.split(/---MENSAJE 2---/i);
+
+    partes.forEach((txt, i) => {
+      const t = txt.trim();
+      if (!t) return;
+      msgsEl.innerHTML += `
+        <div class="portout-msg-block" style="border-color:#00afe4">
+          <div class="portout-msg-label" style="color:#7c3aed">✨ Variante adicional ${i+1}</div>
+          <p class="portout-msg-text">${t}</p>
+          <button class="btn-copy-single-extra" style="margin-top:8px;padding:6px 12px;border-radius:8px;border:1px solid #00afe4;background:transparent;color:#00afe4;cursor:pointer;font-size:.8rem;">📋 Copiar</button>
+        </div>`;
+    });
+
+    msgsEl.querySelectorAll(".btn-copy-single-extra").forEach(b => {
+      b.addEventListener("click", async () => {
+        const t = b.previousElementSibling.textContent;
+        try { await navigator.clipboard.writeText(t); showToast("Mensaje copiado", "success"); }
+        catch { showToast("No se pudo copiar", ""); }
+      });
+    });
+
+    showToast("Speeches generados", "success");
+  } catch (e) {
+    showToast("Error al generar. Intentá de nuevo.", "");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "✨ Generar más speech";
+  }
+});

@@ -33,7 +33,7 @@
       <div class="nav-tabs">
         <button class="tab-btn active" data-tab="form">Formulario</button>
         <button class="tab-btn" data-tab="invoice">Factura</button>
-        <button class="tab-btn" data-tab="speech">Mensaje</button>
+        <button class="tab-btn" data-tab="speech">Speech</button>
       </div>
       <div class="nav-user">
         <img id="user-avatar" src="" alt="" class="user-avatar" />
@@ -246,6 +246,27 @@
           <div class="speech-benefits" id="speech-benefits"></div>
           <div id="speech-messages"></div>
           <button class="btn-copy" id="btn-copy-speech">📋 Copiar mensaje</button>
+        </div>
+      </div>
+
+      <!-- PORTOUT CARD -->
+      <div class="card">
+        <h2 class="card-title">📤 Cliente PortOUT</h2>
+        <p class="speech-hint">Scripts y estrategias para retener clientes que quieren portarse a otra compañía</p>
+        <div class="speech-perfiles portout-btns">
+          <button class="btn-portout" data-portout="decidido">🔴 Cliente decidido a irse</button>
+          <button class="btn-portout" data-portout="indeciso">🟡 Cliente indeciso</button>
+          <button class="btn-portout" data-portout="enojado">🔵 Cliente enojado</button>
+          <button class="btn-portout" data-portout="precio">🟢 Cliente que busca precio</button>
+          <button class="btn-portout btn-portout-tips" data-portout="tips">💡 Tips para abordar PortOUT</button>
+          <button class="btn-portout btn-portout-cierre" data-portout="cierre">🔥 Cierre Ultra Agresivo</button>
+        </div>
+        <div id="portout-output" class="speech-output hidden">
+          <div id="portout-messages"></div>
+          <div class="portout-actions">
+            <button class="btn-copy" id="btn-copy-portout">📋 Copiar</button>
+            <button class="btn-generar-more" id="btn-more-speech">✨ Generar más speech</button>
+          </div>
         </div>
       </div>
 
