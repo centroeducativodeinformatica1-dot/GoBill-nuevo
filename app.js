@@ -849,6 +849,15 @@ function generarSpeechConPerfil(nivel, inv, perfil) {
 document.querySelectorAll(".btn-speech").forEach(btn => {
   btn.addEventListener("click", () => {
     const nivel = +btn.dataset.nivel;
+    const isActive = btn.classList.contains("active");
+
+    // Toggle: si ya estaba activo, ocultar y desactivar
+    if (isActive) {
+      btn.classList.remove("active");
+      document.getElementById("speech-output").classList.add("hidden");
+      return;
+    }
+
     const inv   = window._lastInvoice || {};
     const simConsumo = parseFloat(document.getElementById("sim-consumo").value) || 0;
     const simFactura = parseFloat(document.getElementById("sim-factura").value) || 0;
@@ -956,6 +965,16 @@ let _portoutActivo = null;
 document.querySelectorAll(".btn-portout").forEach(btn => {
   btn.addEventListener("click", () => {
     const tipo = btn.dataset.portout;
+    const isActive = btn.classList.contains("active");
+
+    // Toggle: click again to hide
+    if (isActive) {
+      btn.classList.remove("active");
+      document.getElementById("portout-output").classList.add("hidden");
+      _portoutActivo = null;
+      return;
+    }
+
     _portoutActivo = tipo;
     document.querySelectorAll(".btn-portout").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
@@ -1002,63 +1021,93 @@ document.getElementById("btn-copy-portout").addEventListener("click", async () =
 });
 
 // ═══════════════════════════════════════════════════════════
-//  GENERAR MÁS SPEECH (via Anthropic API)
+//  GENERAR MÁS SPEECH — banco local de variantes
 // ═══════════════════════════════════════════════════════════
 
-document.getElementById("btn-more-speech").addEventListener("click", async () => {
-  const btn = document.getElementById("btn-more-speech");
-  const msgsEl = document.getElementById("portout-messages");
+const PORTOUT_EXTRA = {
+  decidido: [
+    `@Nombre, antes de que tomes la decisión quiero que sepas algo que quizás no te dijeron: cuando te portás, perdés automáticamente todos los beneficios acumulados como cliente.\n\nNo es que Claro te da más — es que nosotros te estamos dando cosas que vos ya tenés ganadas y que no valen lo mismo para alguien nuevo.\n\nLo que puedo hacer es ajustarte el plan ahora mismo para que el precio sea más competitivo sin que pierdas nada de eso. ¿Te parece que lo revisamos juntos?`,
+    `@Nombre, entiendo que la decisión ya la tomaste, y la respeto.\n\nPero antes de proceder, hay algo que me parece justo que conozcas: en este momento tengo disponible una mejora de condiciones que normalmente no se ofrece, y que podría cambiar la ecuación.\n\nNo te pido que cambies de idea — solo dame 2 minutos para mostrarte los números reales y después decidís con toda la información. ¿Está bien?`
+  ],
+  indeciso: [
+    `@Nombre, comparar es lo más inteligente que podés hacer, así que te entiendo perfectamente.\n\nLo que me gustaría que consideraras es esto: Claro te ofrece condiciones de entrada como cliente nuevo — eso siempre suena bien al principio. Pero vos ya tenés historia acá, beneficios activos, y yo tengo margen para mejorar lo que tenés sin que arranques de cero.\n\nPropuesta: dejame armarte una contraoferta concreta y la comparás vos mismo con lo que te propone Claro. Decidís con datos reales, no con promesas. ¿Vamos?`,
+    `@Nombre, lo que te pasa es totalmente normal — a todos nos llaman con ofertas y hay que evaluar.\n\nMi trabajo no es convencerte de quedarte a cualquier costo, sino ayudarte a tomar la mejor decisión. Y para eso necesito que compares bien.\n\nLo que Claro no te dice al principio es el costo real después de los primeros meses. En cambio yo puedo darte condiciones garantizadas desde hoy, sin sorpresas. ¿Querés que armemos la comparación juntos?`
+  ],
+  enojado: [
+    `@Nombre, entiendo que estás enojado/a, y tenés todo el derecho.\n\nSi hay algo que salió mal, quiero saberlo para poder resolverlo — no para convencerte de nada, sino porque es lo correcto.\n\nDecime qué fue lo que pasó, y si está en mis manos, lo arreglamos ahora. Y si además puedo mejorar tu situación con el plan, te lo muestro como opción, no como obligación. ¿Qué fue lo que te molestó?`,
+    `@Nombre, no te voy a pedir que estés de buen humor — entiendo que algo no funcionó como debería.\n\nLo que sí te pido es 3 minutos. Primero para escucharte y entender qué pasó. Segundo para mostrarte qué puedo hacer en concreto para mejorar tu situación.\n\nSi después de eso igual querés irte, lo proceso sin problema. Pero al menos te vas sabiendo que te ofrecí la mejor opción disponible. ¿Qué te parece?`
+  ],
+  precio: [
+    `@Nombre, si el precio es el punto, vamos directo a eso.\n\nNo te voy a dar vueltas: en este momento tengo una promo disponible que baja tu factura de forma concreta. No es marketing — son números reales que podés ver reflejados en la próxima emisión.\n\nLo que sí te voy a pedir es que antes de decidirte por Claro, me des la oportunidad de mostrarte qué número puedo ofrecerte. Si Claro sigue siendo más barato con iguales condiciones, lo entiendo. Pero primero veamos. ¿Sí?`,
+    `@Nombre, si de precio se trata, te propongo algo concreto: decime cuánto querías pagar idealmente, y yo te digo si puedo llegar ahí.\n\nSin vueltas, sin promesas. Si puedo, te lo aplico ahora. Si no puedo exactamente, te muestro lo más cerca que puedo llegar.\n\nAsí comparás con Claro desde un lugar honesto. ¿Cuánto sería para vos una factura que tenga sentido?`
+  ],
+  tips: [
+    `💬 FRASES QUE GENERAN CONFIANZA\n\n"No te voy a pedir que te quedes — te voy a pedir que decidas con toda la información."\n\n"Mi trabajo es que tomes la mejor decisión, no que te quedes a cualquier precio."\n\n"Antes de que procese algo, ¿me das 2 minutos?"\n\n"Lo que Claro no te dice en la propuesta inicial es..."\n\n"Vos ya tenés algo que un cliente nuevo no tiene."\n\n👉 Estas frases bajan la guardia porque no suenan a venta forzada. Y desde ahí es más fácil guiar la decisión.`,
+    `⚡ MANEJO DE OBJECIONES DIFÍCILES\n\n❓ "Ya lo decidí, no me interesa"\n→ "Lo entiendo. Solo necesito un minuto para dejarte algo sobre la mesa antes de procesar. Si no te convence, avanzamos."\n\n❓ "Claro me da más GB"\n→ "¿Sabés cuánto te costará el segundo mes? Porque la promo de entrada tiene vencimiento."\n\n❓ "Es que ya me cansé de llamar"\n→ "Entiendo, y eso me importa. Decime qué pasó para poder resolverlo ahora mismo."\n\n❓ "No me importa lo que me ofrezcas"\n→ "Bien, pero ¿me permitís mostrarte los números? No para convencerte — para que decidas con todo."\n\n🎯 La clave: nunca luches contra la objeción. Validala y redirigí.`
+  ],
+  cierre: [
+    `🎯 CIERRE ESPEJO (el más efectivo en crisis)\n\n@Nombre, voy a ser completamente honesto/a con vos.\n\nSi te vas, perdés beneficios que ya tenés activos. Si te quedás con lo que te puedo ofrecer ahora, salís ganando en precio y en condiciones.\n\nPero lo más importante: la decisión es tuya, y yo la respeto.\n\nLo único que te pido es que me dejes mostrarte los números reales en 60 segundos. Después decidís vos.\n\n(silencio — esperá la respuesta)`,
+    `💥 CIERRE DE EMERGENCIA (último recurso)\n\n@Nombre, última cosa antes de procesar la baja:\n\nEn este momento tengo una oferta que normalmente no puedo hacer. Es por tiempo limitado y solo para clientes como vos que están evaluando irse.\n\nNo te la voy a describir sin antes preguntarte: ¿hay algún número, alguna condición, que te haría reconsiderar quedarte?\n\n(esperá la respuesta — si da una cifra o condición, AHORA tenés el objetivo)\n\nSi no hay nada, avanzo con la baja. Pero si hay algo, trabajo sobre eso ahora mismo.`
+  ]
+};
+
+let _moreSpeeches_shown = {};
+
+document.getElementById("btn-more-speech").addEventListener("click", () => {
   const tipo = _portoutActivo;
-  if (!tipo) return;
+  if (!tipo) { showToast("Primero seleccioná un escenario PortOUT", ""); return; }
 
-  btn.disabled = true;
-  btn.textContent = "⏳ Generando...";
-
-  const data = PORTOUT_SPEECHES[tipo];
-  const contexto = data ? data.msgs.join("\n\n") : "";
-
-  try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 1000,
-        system: "Sos un experto en retención de clientes de telefonía móvil en Argentina, específicamente para Personal Argentina. Generás scripts de ventas y retención en español argentino (vos, tuteo), usando emojis moderadamente. Respondés SOLO con el script, sin explicaciones ni introducción.",
-        messages: [{
-          role: "user",
-          content: `Generá 2 mensajes alternativos adicionales para el escenario: "${data.label}".\n\nBasate en este contexto pero con variaciones creativas y diferentes enfoques:\n${contexto}\n\nRespondé solo con los mensajes, separados por el texto "---MENSAJE 2---" para distinguirlos.`
-        }]
-      })
-    });
-    const result = await response.json();
-    const texto = result.content?.map(i => i.text || "").join("") || "";
-    const partes = texto.split(/---MENSAJE 2---/i);
-
-    partes.forEach((txt, i) => {
-      const t = txt.trim();
-      if (!t) return;
-      msgsEl.innerHTML += `
-        <div class="portout-msg-block" style="border-color:#00afe4">
-          <div class="portout-msg-label" style="color:#7c3aed">✨ Variante adicional ${i+1}</div>
-          <p class="portout-msg-text">${t}</p>
-          <button class="btn-copy-single-extra" style="margin-top:8px;padding:6px 12px;border-radius:8px;border:1px solid #00afe4;background:transparent;color:#00afe4;cursor:pointer;font-size:.8rem;">📋 Copiar</button>
-        </div>`;
-    });
-
-    msgsEl.querySelectorAll(".btn-copy-single-extra").forEach(b => {
-      b.addEventListener("click", async () => {
-        const t = b.previousElementSibling.textContent;
-        try { await navigator.clipboard.writeText(t); showToast("Mensaje copiado", "success"); }
-        catch { showToast("No se pudo copiar", ""); }
-      });
-    });
-
-    showToast("Speeches generados", "success");
-  } catch (e) {
-    showToast("Error al generar. Intentá de nuevo.", "");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "✨ Generar más speech";
+  const extras = PORTOUT_EXTRA[tipo];
+  if (!extras || extras.length === 0) {
+    showToast("No hay más variantes para este escenario", "");
+    return;
   }
+
+  const msgsEl = document.getElementById("portout-messages");
+  const btn = document.getElementById("btn-more-speech");
+
+  if (!_moreSpeeches_shown[tipo]) _moreSpeeches_shown[tipo] = 0;
+  const idx = _moreSpeeches_shown[tipo];
+
+  if (idx >= extras.length) {
+    showToast("Ya mostraste todas las variantes disponibles", "");
+    return;
+  }
+
+  const txt = extras[idx];
+  _moreSpeeches_shown[tipo]++;
+
+  const block = document.createElement("div");
+  block.className = "portout-msg-block";
+  block.style.borderColor = "#00afe4";
+  block.innerHTML = `
+    <div class="portout-msg-label" style="color:#7c3aed">✨ Variante adicional ${idx + 1}</div>
+    <p class="portout-msg-text">${txt}</p>
+    <button style="margin-top:8px;padding:6px 12px;border-radius:8px;border:1.5px solid #00afe4;background:transparent;color:#00afe4;cursor:pointer;font-size:.8rem;font-family:var(--font)">📋 Copiar</button>
+  `;
+  block.querySelector("button").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(txt); showToast("Mensaje copiado", "success"); }
+    catch { showToast("No se pudo copiar", ""); }
+  });
+
+  msgsEl.appendChild(block);
+  block.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+  if (_moreSpeeches_shown[tipo] >= extras.length) {
+    btn.textContent = "✅ Todas las variantes mostradas";
+    btn.disabled = true;
+  }
+
+  showToast("Variante agregada ✨", "success");
+});
+
+// Reset "Generar más speech" button when switching portout scenario
+document.querySelectorAll(".btn-portout").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const moreBtn = document.getElementById("btn-more-speech");
+    if (moreBtn) {
+      moreBtn.textContent = "✨ Generar más speech";
+      moreBtn.disabled = false;
+    }
+  });
 });

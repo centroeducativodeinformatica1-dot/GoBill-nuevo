@@ -475,7 +475,7 @@ html, body {
 .inv-meta-block p { font-size: .88rem; color: var(--gray-800); }
 
 .inv-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-.inv-table th { background: var(--dark); color: var(--white); text-align: left; padding: 8px 12px; font-size: .78rem; font-weight: 500; }
+.inv-table th { background: #00afe4; color: var(--white); text-align: left; padding: 8px 12px; font-size: .78rem; font-weight: 500; }
 .inv-table th:last-child { text-align: right; }
 .inv-table td { padding: 9px 12px; border-bottom: 1px solid var(--gray-100); font-size: .88rem; }
 .inv-table td:last-child { text-align: right; font-family: var(--mono); }
@@ -485,14 +485,14 @@ html, body {
 .inv-total-row { display: flex; gap: 24px; justify-content: flex-end; font-size: .88rem; }
 .inv-total-row span:first-child { color: var(--gray-600); min-width: 140px; text-align: right; }
 .inv-total-row span:last-child { font-family: var(--mono); min-width: 100px; text-align: right; }
-.inv-total-final { font-weight: 700; font-size: 1rem; color: var(--dark); border-top: 2px solid var(--dark); padding-top: 6px; margin-top: 4px; }
+.inv-total-final { font-weight: 700; font-size: 1rem; color: var(--dark); border-top: 2px solid #00afe4; padding-top: 6px; margin-top: 4px; }
 .inv-total-final span:first-child { color: var(--dark); }
 .inv-total-row.green span { color: #166534; }
 .inv-total-row.green span:last-child { font-family: var(--mono); color: #166534; font-weight: 600; }
 td.desc-col { color: #166534; font-family: var(--mono); }
 td.lista-col { color: var(--gray-600); font-family: var(--mono); }
 
-.inv-footer { border-top: 1px solid var(--gray-200); padding-top: 16px; font-size: .75rem; color: var(--gray-400); text-align: center; font-family: var(--mono); }
+.inv-footer { border-top: 2px solid #00afe4; padding-top: 16px; font-size: .75rem; color: var(--gray-400); text-align: center; font-family: var(--mono); background: rgba(0,175,228,.04); border-radius: 0 0 8px 8px; margin-top: 4px; padding-bottom: 12px; }
 
 /* ═══════════════════════════════════════
    SPEECH
