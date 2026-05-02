@@ -950,7 +950,7 @@ const PORTOUT_SPEECHES = {
     ]
   },
   cierre: {
-    label: "🔥 Cierre Ultra Agresivo (RETENCIÓN)",
+    label: "🎯 Cierre Estratégico (RETENCIÓN)",
     msgs: [
       `🎯 MOMENTO: cliente ya dijo que se va / quiere la baja\n\n@Nombre, te entiendo, y si después de esto te sigue conveniendo Claro, avanzamos con la baja sin problema.\n\nPero antes, te voy a ser directo: hoy te estás yendo perdiendo beneficios que ya tenés activos, y eso no lo vas a recuperar después.\n\n(micro pausa, no le des espacio a cortar)`,
       `⚡ GOLPE DE REALIDAD\nAllá empezás de cero. Acá ya tenés ventajas que yo sí puedo mejorar ahora mismo.\n\n💣 PROPUESTA FIRME (sin dudar)\nEn este momento te ajusto el plan para que pagues menos / mejores condiciones, manteniendo todo lo que ya tenés.\n\nNo estás atado a nada raro: simplemente te vas con algo mejor que lo que tenés hoy.\n\n🧠 CONTROL DE DECISIÓN\nHagamos esto: lo aplico ahora, ves cómo te queda… y si no te convence, seguimos con la baja.\n(esto baja la resistencia porque no siente compromiso)`,
