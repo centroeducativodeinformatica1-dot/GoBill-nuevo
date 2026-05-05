@@ -1,10 +1,11 @@
 // ═══════════════════════════════════════════════════════════
-//  GO-BILL · app.js  v2
+//  GO-BILL · app.js  v3
 // ═══════════════════════════════════════════════════════════
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { getDatabase, ref, push, onValue, update, remove }
+  from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey:            "AIzaSyAlGmwv0uQku_5hawF3ddM6kF5ehH69WdM",
@@ -16,24 +17,21 @@ const firebaseConfig = {
   appId:             "1:454607396970:web:455eaa47500e8c5b5caa13",
   measurementId:     "G-3M9QMJ3LG5"
 };
-
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db   = getDatabase(app);
 
 // ═══════════════════════════════════════════════════════════
 //  UTILS
 // ═══════════════════════════════════════════════════════════
-
 const ARS = (n) => new Intl.NumberFormat("es-AR", {
   style: "currency", currency: "ARS", maximumFractionDigits: 2
 }).format(n || 0);
-
 const fechaStr = (iso) => {
   if (!iso) return "—";
   const [y, m, d] = iso.split("-");
   return `${d}/${m}/${y}`;
 };
-
 function showToast(msg, type = "") {
   const t = document.getElementById("toast");
   t.textContent = msg;
@@ -45,7 +43,6 @@ function showToast(msg, type = "") {
 // ═══════════════════════════════════════════════════════════
 //  AUTH
 // ═══════════════════════════════════════════════════════════
-
 document.getElementById("btn-login").addEventListener("click", async () => {
   const email    = document.getElementById("auth-email").value.trim();
   const password = document.getElementById("auth-password").value;
@@ -105,7 +102,6 @@ onAuthStateChanged(auth, (user) => {
 // ═══════════════════════════════════════════════════════════
 //  TABS
 // ═══════════════════════════════════════════════════════════
-
 document.querySelectorAll(".tab-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     const tab = btn.dataset.tab;
@@ -113,57 +109,44 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
     btn.classList.add("active");
     document.getElementById("tab-" + tab).classList.remove("hidden");
+    if (tab === "isla-social")  cargarIslaFeed();
+    if (tab === "mis-speeches") cargarMisSpeeches();
   });
 });
 
 // ═══════════════════════════════════════════════════════════
 //  CICLOS DE FACTURACIÓN
 // ═══════════════════════════════════════════════════════════
-
-// Reglas de vencimiento por ciclo (días del mes siguiente o mismo mes)
 const CICLOS_CONFIG = {
-  7:  { emisionDia: 7,  vencMin: 22, vencMax: 30, mismoMes: true  },
-  14: { emisionDia: 14, vencMin: 1,  vencMax: 6,  mismoMes: false },
-  21: { emisionDia: 21, vencMin: 5,  vencMax: 14, mismoMes: false },
-  28: { emisionDia: 28, vencMin: 12, vencMax: 20, mismoMes: false },
+  7:  { emisionDia: 7,  vencMin: 1, vencMax: 4, mismoMes: true  },
+  14: { emisionDia: 14, vencMin: 3,  vencMax: 5,  mismoMes: false },
+  21: { emisionDia: 21, vencMin: 5,  vencMax: 13, mismoMes: false },
+  28: { emisionDia: 28, vencMin: 10, vencMax: 16, mismoMes: false },
 };
-
 const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
 function aplicarCiclo(ciclo) {
   const cfg  = CICLOS_CONFIG[ciclo];
   const hoy  = new Date();
   const anio = hoy.getFullYear();
-  const mes  = hoy.getMonth(); // 0-based
-
-  // Próxima fecha de emisión = próxima ocurrencia del día del ciclo
+  const mes  = hoy.getMonth();
   let emisionFecha = new Date(anio, mes, cfg.emisionDia);
   if (emisionFecha <= hoy) {
-    // Ya pasó este mes, ir al próximo
     emisionFecha = new Date(anio, mes + 1, cfg.emisionDia);
   }
-
-  // Vencimiento: promedio de vencMin y vencMax, en el mes correcto
-  const vencDia  = Math.round((cfg.vencMin + cfg.vencMax) / 2);
-  const vencMes  = cfg.mismoMes ? emisionFecha.getMonth() : emisionFecha.getMonth() + 1;
+  const vencDia   = Math.round((cfg.vencMin + cfg.vencMax) / 2);
+  const vencMes   = cfg.mismoMes ? emisionFecha.getMonth() : emisionFecha.getMonth() + 1;
   const vencFecha = new Date(emisionFecha.getFullYear(), vencMes, vencDia);
-
-  // Período = mes de emisión
   const periodoStr = MESES[emisionFecha.getMonth()] + " " + emisionFecha.getFullYear();
-
   const toISO = (d) => d.toISOString().split("T")[0];
-
-  document.getElementById("f-fecha").value      = toISO(emisionFecha);
-  document.getElementById("f-vencimiento").value = toISO(vencFecha);
-  document.getElementById("f-periodo").value     = periodoStr;
-
+  document.getElementById("f-fecha").value       = toISO(emisionFecha);
+  document.getElementById("f-vencimiento").value  = toISO(vencFecha);
+  document.getElementById("f-periodo").value      = periodoStr;
   document.getElementById("ciclo-hint").textContent =
     `Ciclo ${ciclo}: emisión día ${cfg.emisionDia} → vencimiento entre el ${cfg.vencMin} y el ${cfg.vencMax} ${cfg.mismoMes ? "del mismo mes" : "del mes siguiente"}`;
-
   document.querySelectorAll(".btn-ciclo").forEach(b => b.classList.remove("active"));
   document.querySelector(`.btn-ciclo[data-ciclo="${ciclo}"]`).classList.add("active");
 }
-
 document.querySelectorAll(".btn-ciclo").forEach(btn => {
   btn.addEventListener("click", () => aplicarCiclo(+btn.dataset.ciclo));
 });
@@ -171,7 +154,6 @@ document.querySelectorAll(".btn-ciclo").forEach(btn => {
 // ═══════════════════════════════════════════════════════════
 //  SECCIONES: HOGAR / MÓVIL
 // ═══════════════════════════════════════════════════════════
-
 const secciones = {
   hogar: [{ desc: "", lista: "", final: "", pct: "" }],
   movil: [{ desc: "", lista: "", final: "", pct: "" }],
@@ -186,9 +168,6 @@ function renderSeccion(sec) {
     const lista = parseFloat(c.lista) || 0;
     const final = parseFloat(c.final) || 0;
     const pct   = parseFloat(c.pct)   || 0;
-
-    // If precio final is set, precio lista = final / (1 - pct/100)
-    // If precio lista is set, neto = lista * (1 - pct/100)
     let listaCalc = lista;
     let finalCalc = final;
     if (final > 0 && pct > 0 && lista === 0) {
@@ -196,7 +175,6 @@ function renderSeccion(sec) {
     } else if (lista > 0) {
       finalCalc = lista - lista * pct / 100;
     }
-
     row.innerHTML =
       `<input type="text" placeholder="Descripción" value="${c.desc}" data-sec="${sec}" data-i="${i}" data-k="desc" />` +
       `<input type="number" placeholder="$ Precio final" value="${c.final || ''}" data-sec="${sec}" data-i="${i}" data-k="final" class="monto" title="Precio final (app contención)" />` +
@@ -205,25 +183,20 @@ function renderSeccion(sec) {
       `<span class="concepto-neto">${(listaCalc > 0 || finalCalc > 0) ? ARS(final > 0 && lista === 0 ? final : finalCalc) : "—"}</span>` +
       `<button class="btn-remove-concepto" data-sec="${sec}" data-i="${i}" title="Eliminar">✕</button>`;
     list.appendChild(row);
-
-    // Auto-fill lista when final+pct change
     const inputFinal = row.querySelector('[data-k="final"]');
     const inputLista = row.querySelector('[data-k="lista"]');
     const inputPct   = row.querySelector('[data-k="pct"]');
-
     function recalc() {
       const f = parseFloat(inputFinal.value) || 0;
       const l = parseFloat(inputLista.value) || 0;
       const p = parseFloat(inputPct.value)   || 0;
       if (f > 0 && p > 0 && l === 0) {
-        // auto-calc lista
         const autoLista = f / (1 - p / 100);
         inputLista.value = autoLista.toFixed(2);
         inputLista.classList.add("auto-filled");
         secciones[sec][i].lista = autoLista.toFixed(2);
       } else if (l > 0) {
         inputLista.classList.remove("auto-filled");
-        // clear final if lista is entered manually
         if (f === 0) {
           inputFinal.value = "";
           secciones[sec][i].final = "";
@@ -231,13 +204,11 @@ function renderSeccion(sec) {
       }
       renderSeccion(sec);
     }
-
     inputFinal.addEventListener("change", e => { secciones[sec][i].final = e.target.value; recalc(); });
     inputLista.addEventListener("change", e => { secciones[sec][i].lista = e.target.value; secciones[sec][i].final = ""; recalc(); });
     inputPct.addEventListener("change",   e => { secciones[sec][i].pct   = e.target.value; recalc(); });
     row.querySelector('[data-k="desc"]').addEventListener("change", e => { secciones[sec][i].desc = e.target.value; });
   });
-
   list.querySelectorAll(".btn-remove-concepto").forEach(btn => {
     btn.addEventListener("click", e => {
       const s = e.target.dataset.sec;
@@ -255,14 +226,12 @@ document.querySelectorAll(".btn-add[data-seccion]").forEach(btn => {
     renderSeccion(sec);
   });
 });
-
 renderSeccion("hogar");
 renderSeccion("movil");
 
 // ═══════════════════════════════════════════════════════════
-//  ADICIONALES
+//  ADICIONALES — con precio autocargado y editable
 // ═══════════════════════════════════════════════════════════
-
 let adicionales = [];
 
 function renderAdicionales() {
@@ -285,7 +254,6 @@ function renderAdicionales() {
       `<button class="btn-remove-concepto" data-i="${i}" title="Eliminar">✕</button>`;
     list.appendChild(row);
   });
-
   list.querySelectorAll("input").forEach(inp => {
     inp.addEventListener("change", e => {
       const i = +e.target.dataset.i;
@@ -294,7 +262,6 @@ function renderAdicionales() {
       renderAdicionales();
     });
   });
-
   list.querySelectorAll(".btn-remove-concepto").forEach(btn => {
     btn.addEventListener("click", e => {
       const i = +e.target.dataset.i;
@@ -304,9 +271,28 @@ function renderAdicionales() {
   });
 }
 
+// Precios precargados por adicional
+const PRECIOS_PRESET = {
+  "Netflix":          0,
+  "Disney+ Estándar": 12299,
+  "Disney+ Premium":  18399,
+  "Pack HBO":         11420,
+  "Paramount+":       0,
+  "Pack Fútbol":      23350,
+  "Universal+":       11420,
+  "Pack 3 Premium":   13355,
+};
+
 document.querySelectorAll(".btn-preset").forEach(btn => {
   btn.addEventListener("click", () => {
-    adicionales.push({ nombre: btn.dataset.nombre, logo: btn.dataset.logo, lista: "", pct: "" });
+    const nombre = btn.dataset.nombre;
+    const precio = parseFloat(btn.dataset.precio) || 0;
+    adicionales.push({
+      nombre: nombre,
+      logo:   btn.dataset.logo,
+      lista:  precio > 0 ? String(precio) : "",
+      pct:    ""
+    });
     renderAdicionales();
   });
 });
@@ -314,41 +300,34 @@ document.querySelectorAll(".btn-preset").forEach(btn => {
 // ═══════════════════════════════════════════════════════════
 //  MOTOR DE CÁLCULO
 // ═══════════════════════════════════════════════════════════
-
 function calcularFactura(data) {
   const calcSec = (sec) => secciones[sec].reduce((s, c) => {
     const l = parseFloat(c.lista) || 0;
     const p = parseFloat(c.pct)   || 0;
     return { lista: s.lista + l, desc: s.desc + l * p / 100 };
   }, { lista: 0, desc: 0 });
-
   const hogar  = calcSec("hogar");
   const movil  = calcSec("movil");
-
   const adicionalesLista = adicionales.reduce((s, a) => s + (parseFloat(a.lista) || 0), 0);
   const adicionalesDesc  = adicionales.reduce((s, a) => {
     const l = parseFloat(a.lista) || 0;
     const p = parseFloat(a.pct)   || 0;
     return s + l * p / 100;
   }, 0);
-
-  const precioLista      = hogar.lista + movil.lista + adicionalesLista;
-  const descuentosPct    = hogar.desc  + movil.desc  + adicionalesDesc;
-  const descuentoCT      = parseFloat(data.descuentoCT) || 0;
-  const totalDescuentos  = descuentosPct + descuentoCT;
-
+  const precioLista     = hogar.lista + movil.lista + adicionalesLista;
+  const descuentosPct   = hogar.desc  + movil.desc  + adicionalesDesc;
+  const descuentoCT     = parseFloat(data.descuentoCT) || 0;
+  const totalDescuentos = descuentosPct + descuentoCT;
   const subtotal  = precioLista - totalDescuentos;
   const credito   = parseFloat(data.credito) || 0;
   const mora      = parseFloat(data.mora)    || 0;
   const total     = subtotal + mora - credito;
-
   return { precioLista, descuentosPct, descuentoCT, totalDescuentos, subtotal, credito, mora, ivaAmt: 0, ivaRate: 0, total, hogar, movil, adicionalesLista, adicionalesDesc };
 }
 
 // ═══════════════════════════════════════════════════════════
 //  GENERAR FACTURA HTML
 // ═══════════════════════════════════════════════════════════
-
 document.getElementById("btn-generar").addEventListener("click", () => {
   const g = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ""; };
   const data = {
@@ -363,11 +342,8 @@ document.getElementById("btn-generar").addEventListener("click", () => {
     iva:         g("f-iva") || "21",
     descuentoCT: g("f-descuento-ct"),
   };
-
   if (!data.nombre) { showToast("Ingresá el nombre del cliente", "error"); return; }
-
   const { precioLista, totalDescuentos, descuentoCT, subtotal, credito, mora, ivaAmt, ivaRate, total, hogar, movil, adicionalesLista, adicionalesDesc } = calcularFactura(data);
-
   const filasSec = (sec, titulo) => {
     const items = secciones[sec].filter(c => c.desc || c.lista);
     if (!items.length) return "";
@@ -385,7 +361,6 @@ document.getElementById("btn-generar").addEventListener("click", () => {
     }).join("");
     return `<tr class="sec-header"><td colspan="4">${titulo}</td></tr>${rows}`;
   };
-
   const filasAdicionales = adicionales.filter(a => a.nombre || a.lista).map(a => {
     const l = parseFloat(a.lista) || 0;
     const p = parseFloat(a.pct)   || 0;
@@ -398,89 +373,71 @@ document.getElementById("btn-generar").addEventListener("click", () => {
       <td>${ARS(n)}</td>
     </tr>`;
   }).join("");
-
   const filasAdicSection = filasAdicionales
     ? `<tr class="sec-header"><td colspan="4">🎬 Adicionales</td></tr>${filasAdicionales}` : "";
-
   const html = `
     <div class="inv-paper-wrap">
       <div class="inv-watermark">NO VÁLIDO COMO FACTURA</div>
-
       <div class="inv-header">
         <img src="assets/logo-personal.png" alt="Personal" class="inv-logo"
              onerror="this.outerHTML='<span class=inv-logo-placeholder>Personal</span>'" />
         <div class="inv-tipo-col">
-          <div class="inv-tipo-box">
-            <span class="inv-tipo-x">✕</span>
-          </div>
+          <div class="inv-tipo-box"><span class="inv-tipo-x">✕</span></div>
           <span class="inv-tipo-label">FACTURA</span>
         </div>
         ${data.nrofactura ? `<p class="inv-nro">${data.nrofactura}</p>` : ""}
       </div>
-
-    <div class="inv-meta">
-      <div class="inv-meta-col">
-        <div class="inv-meta-row"><span>Cliente</span><strong>${data.nombre}</strong></div>
-        ${data.cuenta ? `<div class="inv-meta-row"><span>Cuenta</span><strong>${data.cuenta}</strong></div>` : ""}
+      <div class="inv-meta">
+        <div class="inv-meta-col">
+          <div class="inv-meta-row"><span>Cliente</span><strong>${data.nombre}</strong></div>
+          ${data.cuenta ? `<div class="inv-meta-row"><span>Cuenta</span><strong>${data.cuenta}</strong></div>` : ""}
+        </div>
+        <div class="inv-meta-col">
+          <div class="inv-meta-row"><span>Período</span><strong>${data.periodo || "—"}</strong></div>
+          <div class="inv-meta-row"><span>Emisión</span><strong>${fechaStr(data.fecha)}</strong></div>
+          <div class="inv-meta-row venc"><span>Vencimiento</span><strong>${fechaStr(data.vencimiento)}</strong></div>
+        </div>
       </div>
-      <div class="inv-meta-col">
-        <div class="inv-meta-row"><span>Período</span><strong>${data.periodo || "—"}</strong></div>
-        <div class="inv-meta-row"><span>Emisión</span><strong>${fechaStr(data.fecha)}</strong></div>
-        <div class="inv-meta-row venc"><span>Vencimiento</span><strong>${fechaStr(data.vencimiento)}</strong></div>
+      <table class="inv-table">
+        <thead>
+          <tr><th>Concepto</th><th>Precio lista</th><th>Descuento</th><th>Subtotal</th></tr>
+        </thead>
+        <tbody>
+          ${filasSec("hogar", "🏠 Hogar") || ""}
+          ${filasSec("movil", "📱 Móvil") || ""}
+          ${filasAdicSection}
+          ${(!filasSec("hogar","") && !filasSec("movil","") && !filasAdicionales)
+            ? "<tr><td colspan='4' style='text-align:center;color:#aaa'>Sin conceptos</td></tr>" : ""}
+        </tbody>
+      </table>
+      <div class="inv-totals">
+        <div class="inv-total-row"><span>Precio de lista</span><span>${ARS(precioLista)}</span></div>
+        ${totalDescuentos > 0 ? `<div class="inv-total-row green"><span>Total descuentos</span><span>−${ARS(totalDescuentos)}</span></div>` : ""}
+        ${descuentoCT > 0 ? `<div class="inv-total-row green desc-ct"><span>↳ Desc. Conexión Total</span><span>−${ARS(descuentoCT)}</span></div>` : ""}
+        <div class="inv-total-row"><span>Subtotal</span><span>${ARS(subtotal)}</span></div>
+        ${mora > 0 ? `<div class="inv-total-row"><span>Mora / Interés</span><span>${ARS(mora)}</span></div>` : ""}
+        ${credito > 0 ? `<div class="inv-total-row"><span>Crédito a favor</span><span>−${ARS(credito)}</span></div>` : ""}
+        <div class="inv-total-row inv-total-final"><span>TOTAL A PAGAR</span><span>${ARS(total)}</span></div>
       </div>
-    </div>
-
-    <table class="inv-table">
-      <thead>
-        <tr><th>Concepto</th><th>Precio lista</th><th>Descuento</th><th>Subtotal</th></tr>
-      </thead>
-      <tbody>
-        ${filasSec("hogar", "🏠 Hogar") || ""}
-        ${filasSec("movil", "📱 Móvil") || ""}
-        ${filasAdicSection}
-        ${(!filasSec("hogar","") && !filasSec("movil","") && !filasAdicionales)
-          ? "<tr><td colspan='4' style='text-align:center;color:#aaa'>Sin conceptos</td></tr>" : ""}
-      </tbody>
-    </table>
-
-    <div class="inv-totals">
-      <div class="inv-total-row"><span>Precio de lista</span><span>${ARS(precioLista)}</span></div>
-      ${totalDescuentos > 0 ? `<div class="inv-total-row green"><span>Total descuentos</span><span>−${ARS(totalDescuentos)}</span></div>` : ""}
-      ${descuentoCT > 0 ? `<div class="inv-total-row green desc-ct"><span>↳ Desc. Conexión Total</span><span>−${ARS(descuentoCT)}</span></div>` : ""}
-      <div class="inv-total-row"><span>Subtotal</span><span>${ARS(subtotal)}</span></div>
-      ${mora > 0 ? `<div class="inv-total-row"><span>Mora / Interés</span><span>${ARS(mora)}</span></div>` : ""}
-      ${credito > 0 ? `<div class="inv-total-row"><span>Crédito a favor</span><span>−${ARS(credito)}</span></div>` : ""}
-      <div class="inv-total-row inv-total-final"><span>TOTAL A PAGAR</span><span>${ARS(total)}</span></div>
-    </div>
-
-    <div class="inv-footer">Personal Argentina · Telecomunicaciones · go-bill.vercel.app</div>
+      <div class="inv-footer">Personal Argentina · Telecomunicaciones · go-bill.vercel.app</div>
     </div>
   `;
-
   document.getElementById("invoice-render").innerHTML = html;
   window._lastInvoice = { ...data, total, totalDescuentos, precioLista, periodo: data.periodo };
-
-  // Si no hay conceptos (total = 0), avisamos pero igual generamos
   if (total === 0 && precioLista === 0) {
     showToast("Factura generada sin conceptos — podés agregar ítems si querés", "");
   }
-
-  // Switch to invoice tab
   document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
   document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
   document.querySelector('.tab-btn[data-tab="invoice"]').classList.add("active");
   document.getElementById("tab-invoice").classList.remove("hidden");
-
-  // Update form simulator
   actualizarSimuladorForm();
 });
 
 // ═══════════════════════════════════════════════════════════
 //  CAPTURA / IMPRIMIR
 // ═══════════════════════════════════════════════════════════
-
 document.getElementById("btn-print").addEventListener("click", () => window.print());
-
 document.getElementById("btn-captura").addEventListener("click", async () => {
   const el = document.getElementById("invoice-render");
   if (!el || el.querySelector(".invoice-empty")) {
@@ -505,7 +462,6 @@ document.getElementById("btn-captura").addEventListener("click", async () => {
 // ═══════════════════════════════════════════════════════════
 //  NIVELES PERSONAL PAY
 // ═══════════════════════════════════════════════════════════
-
 const NIVELES = {
   0: null,
   1: { nombre: "Nivel 1", consumoClientes: 0,      reintegroFactura: 10, topeReintegro: 750,  color: "#a7f3d0" },
@@ -513,14 +469,12 @@ const NIVELES = {
   3: { nombre: "Nivel 3", consumoClientes: 200000, reintegroFactura: 20, topeReintegro: 3500, color: "#5118C5" },
   4: { nombre: "Nivel 4", consumoClientes: 300000, reintegroFactura: 25, topeReintegro: 7000, color: "#002B49" },
 };
-
 const SIM_NIVELES = [
   { nivel: 1, consumoMin: 0,      pct: 10, tope: 750  },
   { nivel: 2, consumoMin: 75000,  pct: 15, tope: 2000 },
   { nivel: 3, consumoMin: 200000, pct: 20, tope: 3500 },
   { nivel: 4, consumoMin: 300000, pct: 25, tope: 7000 },
 ];
-
 function getNivelActual(consumo) {
   let actual = SIM_NIVELES[0];
   for (const n of SIM_NIVELES) {
@@ -530,12 +484,10 @@ function getNivelActual(consumo) {
 }
 
 // ─── SIMULADOR MENSAJE TAB ────────────────────────────────
-
 function actualizarSimulador() {
   const consumo = parseFloat(document.getElementById("sim-consumo").value) || 0;
   const factura = parseFloat(document.getElementById("sim-factura").value) || 0;
   const nivelAct = getNivelActual(consumo);
-
   SIM_NIVELES.forEach(n => {
     const col = document.getElementById("nivel-col-" + n.nivel);
     const rei = document.getElementById("rei-" + n.nivel);
@@ -551,7 +503,6 @@ function actualizarSimulador() {
       rei.classList.remove("rei-activo");
     }
   });
-
   const result = document.getElementById("sim-result");
   if (consumo > 0) {
     result.classList.remove("hidden");
@@ -575,20 +526,14 @@ function actualizarSimulador() {
     });
   }
 }
-
 document.getElementById("sim-consumo").addEventListener("input", actualizarSimulador);
 document.getElementById("sim-factura").addEventListener("input", actualizarSimulador);
 
 // ─── SIMULADOR FORMULARIO TAB ────────────────────────────
-
 function actualizarSimuladorForm() {
-  const consumo = parseFloat(document.getElementById("form-sim-consumo").value) || 0;
-  const facturaAmt = (() => {
-    if (window._lastInvoice && window._lastInvoice.total) return window._lastInvoice.total;
-    return 0;
-  })();
-  const nivelAct = getNivelActual(consumo);
-
+  const consumo    = parseFloat(document.getElementById("form-sim-consumo").value) || 0;
+  const facturaAmt = window._lastInvoice?.total || 0;
+  const nivelAct   = getNivelActual(consumo);
   SIM_NIVELES.forEach(n => {
     const col = document.getElementById("form-nivel-col-" + n.nivel);
     const rei = document.getElementById("form-rei-" + n.nivel);
@@ -605,7 +550,6 @@ function actualizarSimuladorForm() {
       rei.classList.remove("rei-activo");
     }
   });
-
   const result = document.getElementById("form-sim-result");
   if (consumo > 0) {
     result.classList.remove("hidden");
@@ -629,15 +573,12 @@ function actualizarSimuladorForm() {
     });
   }
 }
-
 document.getElementById("form-sim-consumo").addEventListener("input", actualizarSimuladorForm);
 
 // ═══════════════════════════════════════════════════════════
 //  PERFILES + SPEECHES
 // ═══════════════════════════════════════════════════════════
-
 let _perfilActivo = "positivo";
-
 document.querySelectorAll(".btn-perfil").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".btn-perfil").forEach(b => b.classList.remove("active"));
@@ -713,14 +654,8 @@ function generarSpeechConPerfil(nivel, inv, perfil) {
   const periodo     = inv.periodo || "este período";
   const n           = NIVELES[nivel];
   const rei         = n ? Math.min(totalFact * (n.reintegroFactura / 100), n.topeReintegro) : 0;
-
-  // Helper: formato fecha aprox de vencimiento
-  const vencHint = inv.vencimiento ? `con vencimiento aproximado el ${fechaStr(inv.vencimiento)}` : "en tu próxima factura";
-
-  // ── TEMPLATES POR PERFIL ──────────────────────────────────
-
+  const vencHint    = inv.vencimiento ? `con vencimiento aproximado el ${fechaStr(inv.vencimiento)}` : "en tu próxima factura";
   const tpl = {
-
     positivo: () => {
       if (nivel === 0 && totalDesc > 0) return [
         `¡Excelente noticia, ${nombre}! 🎉\n¡Te conseguí una promo especial para que sigas disfrutando del servicio! 😎`,
@@ -735,7 +670,6 @@ function generarSpeechConPerfil(nivel, inv, perfil) {
         `🎯 *Y encima tenés estos beneficios adicionales:*\n📱 20% de crédito extra en recargas semanales\n🛒 Hasta 20% en supermercados con Personal Pay\n🛍️ Hasta 15% en Tienda Personal sin tope mensual\n${nivel < 4 ? `\n▲ Si llegás a ${ARS(NIVELES[nivel+1].consumoClientes)}/mes subís al ${NIVELES[nivel+1].nombre} con ${NIVELES[nivel+1].reintegroFactura}% de reintegro.` : '\n⭐ ¡Ya estás en el nivel máximo!'}\n\nSi te parece bien confirmame y lo cargo ahora mismo. 💪`
       ];
     },
-
     negativo: () => {
       if (nivel === 0) return [
         `${nombre}, entiendo perfectamente tu situación y quiero ser honesto/a con vos. ✅\nMirá lo que pude conseguirte concreto:`
@@ -746,7 +680,6 @@ function generarSpeechConPerfil(nivel, inv, perfil) {
         `✅ *Resultado para tu cuenta:*\n${totalDesc > 0 ? `💸 Ahorro directo: ${ARS(totalDesc)}\n📄 Factura ajustada: ${ARS(totalFact)}\n` : `📄 Factura ${periodo}: ${ARS(totalFact)}\n`}💳 Con Personal Pay sumás ${ARS(rei)} más de reintegro (${n.reintegroFactura}%).\n\nSon números concretos, no palabras. Lo que me pedís que mejore lo anoto — trabajamos para eso.`
       ];
     },
-
     disconforme: () => {
       if (nivel === 0) return [
         `${nombre}, entiendo completamente lo que me estás comentando 🙏\nY la verdad, si yo estuviera en tu lugar también estaría molesto/a.\nQuedate tranquilo/a que lo vamos a resolver 💪`,
@@ -758,7 +691,6 @@ function generarSpeechConPerfil(nivel, inv, perfil) {
         `💳 *Y hay algo más que quiero que conozcas — Personal Pay:*\nSi pagás la factura desde la app Personal Pay, te entra un reintegro automático de ${ARS(rei)} (${n.reintegroFactura}% de tu factura).\n\n📱 20% de crédito extra en recargas semanales\n🛒 Hasta 20% en supermercados\n🛍️ Hasta 15% en Tienda Personal\n\nO sea: bajamos la factura, la solucionamos, y encima la app te devuelve plata. ¿Vamos bien hasta acá?`
       ];
     },
-
     confundido: () => {
       if (nivel === 0) return [
         `${nombre}, te explico de manera sencilla para que quede 100% claro. 📋\n`
@@ -772,7 +704,6 @@ function generarSpeechConPerfil(nivel, inv, perfil) {
         `📌 *Paso 2 — Personal Pay:*\nSi pagás con Personal Pay en la app, te devuelven ${ARS(rei)} (eso es el ${n.reintegroFactura}% de reintegro).\n\nO sea, de los ${ARS(totalFact)} que pagás, te vuelven ${ARS(rei)} — tu costo real es ${ARS(Math.max(0, totalFact - rei))}.\n\n¿Quedó claro? ¿Querés que repasemos algo?`
       ];
     },
-
     sabelotodo: () => {
       if (nivel === 0) return [
         `${nombre}, te paso los números exactos para que los evalúes. 📊\n`
@@ -785,7 +716,6 @@ function generarSpeechConPerfil(nivel, inv, perfil) {
         `📈 *Datos concretos de tu cuenta:*\n${totalDesc > 0 ? `• Precio lista: ${ARS(precioLista)}\n• Descuento aplicado: -${ARS(totalDesc)} (${precioLista > 0 ? Math.round(totalDesc/precioLista*100) : 0}%)\n• Total factura: ${ARS(totalFact)}\n` : `• Factura ${periodo}: ${ARS(totalFact)}\n`}• Nivel Personal Pay: ${n.nombre}\n• Reintegro facturas: ${n.reintegroFactura}% (tope ${ARS(n.topeReintegro)}/mes)\n• Reintegro estimado: ${ARS(rei)}\n• Costo efectivo: ${ARS(Math.max(0, totalFact - rei))}\n\nTodo verificable en la app oficial de Personal. Cualquier cifra que quieras cotejar, te confirmo.`
       ];
     },
-
     "poco-comunicativo": () => {
       if (nivel === 0) return [
         `${nombre}: factura ${ARS(totalFact)}${totalDesc > 0 ? `, con descuento de ${ARS(totalDesc)}` : ""}. ¿Alguna duda?`
@@ -794,7 +724,6 @@ function generarSpeechConPerfil(nivel, inv, perfil) {
         `${nombre}:\n• Factura: ${ARS(totalFact)}\n• Reintegro Personal Pay: ${ARS(rei)}\n• Costo neto: ${ARS(Math.max(0, totalFact - rei))}\n\n¿Pagás desde la app? Con Personal Pay ese reintegro te entra automático 👍`
       ];
     },
-
     relajado: () => {
       if (nivel === 0) return [
         `${nombre}, sin apuro te cuento. 😊\n`
@@ -805,9 +734,7 @@ function generarSpeechConPerfil(nivel, inv, perfil) {
         `${totalDesc > 0 ? `Logré bajarte la factura de ${ARS(precioLista)} a ${ARS(totalFact)}` : `Tu factura de ${periodo} es ${ARS(totalFact)}`} y si la pagás con Personal Pay te vuelven ${ARS(rei)} de reintegro.\n\nO sea, terminás pagando alrededor de ${ARS(Math.max(0, totalFact - rei))} en la práctica. No está nada mal, ¿no? 😄\n\nCualquier duda que surja, acá estoy sin problemas.`
       ];
     },
-
     bonus: () => {
-      // Speech especial para refuerzo de cierre / segunda oportunidad
       const extraPersonalPay = nivel > 0
         ? `\n\n💳 *Recordá — Personal Pay:*\nPagás desde la app y te depositan ${ARS(rei)} de reintegro automático. Es plata que te vuelve sin trámite, sin papeles. Solo pagás y ya.`
         : "";
@@ -819,15 +746,12 @@ function generarSpeechConPerfil(nivel, inv, perfil) {
         `Todo lo que te mostré hoy es real y ya está disponible para vos:\n\n${totalDesc > 0 ? `✅ Descuento de ${ARS(totalDesc)} — factura en ${ARS(totalFact)}\n` : `📄 Factura ${periodo}: ${ARS(totalFact)}\n`}💳 Personal Pay: reintegro de ${ARS(rei)} automático por pagar desde la app\n📱 20% extra en recargas semanales\n🛒 Hasta 20% en supermercados\n🛍️ Hasta 15% en Tienda Personal${extraPersonalPay}\n\n👉 No hay nada que perder y sí bastante que ganar. ¿Lo dejamos activado?`
       ];
     },
-
     microcierres: () => {
-      // Herramienta de apoyo: frases de microcierre para usar durante la conversación
       return [
         `💬 *Microcierres — usalos durante la charla:*\n\n"¿Te sirve así?"\n"¿Vamos bien hasta acá?"\n"¿Tiene sentido lo que te digo?"\n"¿Lo vemos juntos?"\n"¿Querés que lo aplico ahora?"\n"¿Te parece?"\n"¿Arrancamos?"\n\n👉 Metelos entre mensaje y mensaje para que el cliente vaya diciendo pequeños "sí" antes del cierre final. Cada "sí" intermedio hace más fácil el "sí" definitivo.`,
         `🎯 *Frases de cierre final:*\n\n"Si querés, lo activo ahora y ya impacta en la próxima factura — ¿lo hacemos?"\n"Es la forma más rápida de bajar tu factura desde ya — ¿lo aplico?"\n"Lo dejo cargado y listo, ¿de acuerdo?"\n"¿Arrancamos con esto?"\n\n🔁 *Si el cliente duda:*\n"Igual lo anoto para que no se te vaya la promo — estas condiciones son temporales."\n"No te comprometés a nada, solo te muestro los números — ¿seguimos?"`
       ];
     },
-
     controlador: () => {
       if (nivel === 0) return [
         `${nombre}, te detallo todo para que tengas el control completo de la situación. 📌\n`
@@ -842,31 +766,25 @@ function generarSpeechConPerfil(nivel, inv, perfil) {
       ];
     },
   };
-
-  return ((tpl[perfil] || tpl.positivo)()) ;
+  return ((tpl[perfil] || tpl.positivo)());
 }
 
 document.querySelectorAll(".btn-speech").forEach(btn => {
   btn.addEventListener("click", () => {
     const nivel = +btn.dataset.nivel;
     const isActive = btn.classList.contains("active");
-
-    // Toggle: si ya estaba activo, ocultar y desactivar
     if (isActive) {
       btn.classList.remove("active");
       document.getElementById("speech-output").classList.add("hidden");
       return;
     }
-
-    const inv   = window._lastInvoice || {};
+    const inv        = window._lastInvoice || {};
     const simConsumo = parseFloat(document.getElementById("sim-consumo").value) || 0;
     const simFactura = parseFloat(document.getElementById("sim-factura").value) || 0;
     if (simConsumo) inv.simConsumo = simConsumo;
     if (simFactura && !inv.total) inv.total = simFactura;
-
     document.querySelectorAll(".btn-speech").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-
     renderBenefits(nivel);
     const partes = generarSpeechConPerfil(nivel, inv, _perfilActivo);
     const msgsEl = document.getElementById("speech-messages");
@@ -909,7 +827,6 @@ document.getElementById("btn-copy-speech").addEventListener("click", async () =>
 // ═══════════════════════════════════════════════════════════
 //  PORTOUT SPEECHES
 // ═══════════════════════════════════════════════════════════
-
 const PORTOUT_SPEECHES = {
   decidido: {
     label: "🔴 Cliente decidido a irse",
@@ -959,32 +876,24 @@ const PORTOUT_SPEECHES = {
   }
 };
 
-// Render portout
 let _portoutActivo = null;
-
 document.querySelectorAll(".btn-portout").forEach(btn => {
   btn.addEventListener("click", () => {
     const tipo = btn.dataset.portout;
     const isActive = btn.classList.contains("active");
-
-    // Toggle: click again to hide
     if (isActive) {
       btn.classList.remove("active");
       document.getElementById("portout-output").classList.add("hidden");
       _portoutActivo = null;
       return;
     }
-
     _portoutActivo = tipo;
     document.querySelectorAll(".btn-portout").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-
     const data = PORTOUT_SPEECHES[tipo];
     if (!data) return;
-
     const msgsEl = document.getElementById("portout-messages");
     msgsEl.innerHTML = "";
-
     if (data.msgs.length === 1) {
       msgsEl.innerHTML = `<div class="portout-msg-block"><p class="portout-msg-text">${data.msgs[0]}</p></div>`;
     } else {
@@ -1021,9 +930,8 @@ document.getElementById("btn-copy-portout").addEventListener("click", async () =
 });
 
 // ═══════════════════════════════════════════════════════════
-//  GENERAR MÁS SPEECH — banco local de variantes
+//  GENERAR MÁS SPEECH
 // ═══════════════════════════════════════════════════════════
-
 const PORTOUT_EXTRA = {
   decidido: [
     `@Nombre, antes de que tomes la decisión quiero que sepas algo que quizás no te dijeron: cuando te portás, perdés automáticamente todos los beneficios acumulados como cliente.\n\nNo es que Claro te da más — es que nosotros te estamos dando cosas que vos ya tenés ganadas y que no valen lo mismo para alguien nuevo.\n\nLo que puedo hacer es ajustarte el plan ahora mismo para que el precio sea más competitivo sin que pierdas nada de eso. ¿Te parece que lo revisamos juntos?`,
@@ -1052,31 +960,18 @@ const PORTOUT_EXTRA = {
 };
 
 let _moreSpeeches_shown = {};
-
 document.getElementById("btn-more-speech").addEventListener("click", () => {
   const tipo = _portoutActivo;
   if (!tipo) { showToast("Primero seleccioná un escenario PortOUT", ""); return; }
-
   const extras = PORTOUT_EXTRA[tipo];
-  if (!extras || extras.length === 0) {
-    showToast("No hay más variantes para este escenario", "");
-    return;
-  }
-
+  if (!extras || extras.length === 0) { showToast("No hay más variantes para este escenario", ""); return; }
   const msgsEl = document.getElementById("portout-messages");
-  const btn = document.getElementById("btn-more-speech");
-
+  const btn    = document.getElementById("btn-more-speech");
   if (!_moreSpeeches_shown[tipo]) _moreSpeeches_shown[tipo] = 0;
   const idx = _moreSpeeches_shown[tipo];
-
-  if (idx >= extras.length) {
-    showToast("Ya mostraste todas las variantes disponibles", "");
-    return;
-  }
-
+  if (idx >= extras.length) { showToast("Ya mostraste todas las variantes disponibles", ""); return; }
   const txt = extras[idx];
   _moreSpeeches_shown[tipo]++;
-
   const block = document.createElement("div");
   block.className = "portout-msg-block";
   block.style.borderColor = "#00afe4";
@@ -1089,25 +984,268 @@ document.getElementById("btn-more-speech").addEventListener("click", () => {
     try { await navigator.clipboard.writeText(txt); showToast("Mensaje copiado", "success"); }
     catch { showToast("No se pudo copiar", ""); }
   });
-
   msgsEl.appendChild(block);
   block.scrollIntoView({ behavior: "smooth", block: "nearest" });
-
   if (_moreSpeeches_shown[tipo] >= extras.length) {
     btn.textContent = "✅ Todas las variantes mostradas";
     btn.disabled = true;
   }
-
   showToast("Variante agregada ✨", "success");
 });
 
-// Reset "Generar más speech" button when switching portout scenario
 document.querySelectorAll(".btn-portout").forEach(btn => {
   btn.addEventListener("click", () => {
     const moreBtn = document.getElementById("btn-more-speech");
-    if (moreBtn) {
-      moreBtn.textContent = "✨ Generar más speech";
-      moreBtn.disabled = false;
-    }
+    if (moreBtn) { moreBtn.textContent = "✨ Generar más speech"; moreBtn.disabled = false; }
   });
 });
+
+// ═══════════════════════════════════════════════════════════
+//  ISLA SOCIAL & MIS SPEECHES — Firebase
+// ═══════════════════════════════════════════════════════════
+
+// ── Tag selector helper ──────────────────────────────────
+function setupTagSelect(containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  container.querySelectorAll(".isla-tag-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      container.querySelectorAll(".isla-tag-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+    });
+  });
+}
+setupTagSelect("isla-tag-select");
+setupTagSelect("mis-tag-select");
+
+function getActiveTag(containerId) {
+  const btn = document.querySelector(`#${containerId} .isla-tag-btn.active`);
+  return btn ? btn.dataset.tag : "General";
+}
+
+// ── Render estrellas ─────────────────────────────────────
+function renderEstrellas(promedio, total) {
+  const llenas = Math.round(promedio);
+  let html = '<span class="estrellas-wrap">';
+  for (let i = 1; i <= 5; i++) {
+    html += `<span class="estrella ${i <= llenas ? 'on' : 'off'}">★</span>`;
+  }
+  html += `</span><span class="estrella-count">${promedio > 0 ? promedio.toFixed(1) : '—'} (${total})</span>`;
+  return html;
+}
+
+// ── Render card de speech ────────────────────────────────
+function renderSpeechCard(id, data, currentUser, container, tipo = "isla") {
+  const card = document.createElement("div");
+  card.className = "isla-card";
+  card.dataset.id = id;
+
+  const misVotos   = data.votos || {};
+  const totalVotos = Object.keys(misVotos).length;
+  const sumaVotos  = Object.values(misVotos).reduce((a, b) => a + b, 0);
+  const promedio   = totalVotos > 0 ? sumaVotos / totalVotos : 0;
+  const uidKey     = currentUser ? currentUser.uid.replace(/\./g, "_") : "";
+  const miVoto     = uidKey ? (misVotos[uidKey] || 0) : 0;
+  const esMio      = currentUser && data.uid === currentUser.uid;
+
+  const fecha = data.timestamp
+    ? new Date(data.timestamp).toLocaleDateString("es-AR", { day:"2-digit", month:"short", year:"numeric" })
+    : "—";
+
+  card.innerHTML = `
+    <div class="isla-card-header">
+      <div class="isla-card-meta">
+        <span class="isla-card-tag">${data.tag || "General"}</span>
+        <span class="isla-card-autor">👤 ${data.autorNombre || "Anónimo"}</span>
+        <span class="isla-card-fecha">${fecha}</span>
+      </div>
+      ${esMio && tipo === "isla" ? `<button class="btn-isla-delete" data-id="${id}" title="Eliminar">🗑️</button>` : ""}
+      ${tipo === "mis" ? `<button class="btn-mis-delete" data-id="${id}" title="Eliminar">🗑️</button>` : ""}
+    </div>
+    <h3 class="isla-card-titulo">${data.titulo || "Sin título"}</h3>
+    <p class="isla-card-contenido">${(data.contenido || "").replace(/\n/g, "<br>")}</p>
+    <div class="isla-card-footer">
+      <div class="isla-rating">
+        ${renderEstrellas(promedio, totalVotos)}
+        ${tipo === "isla" && currentUser && !esMio ? `
+          <div class="estrellas-input" data-id="${id}">
+            ${[1,2,3,4,5].map(n =>
+              `<span class="estrella-vote ${n <= miVoto ? 'voted' : ''}" data-val="${n}" title="${n} estrella${n>1?'s':''}">★</span>`
+            ).join("")}
+          </div>
+          <span class="vota-hint">Tu voto</span>
+        ` : ""}
+      </div>
+      <div class="isla-card-actions">
+        <button class="btn-isla-copiar" data-contenido="${encodeURIComponent(data.contenido || '')}">📋 Copiar</button>
+        ${tipo === "isla" && currentUser ? `<button class="btn-isla-guardar" data-id="${id}">⭐ Guardar</button>` : ""}
+      </div>
+    </div>
+  `;
+
+  // Votar estrellas
+  if (tipo === "isla" && currentUser && !esMio) {
+    card.querySelectorAll(".estrella-vote").forEach(star => {
+      star.addEventListener("mouseenter", () => {
+        const val = +star.dataset.val;
+        card.querySelectorAll(".estrella-vote").forEach(s => {
+          s.classList.toggle("hovered", +s.dataset.val <= val);
+        });
+      });
+      star.addEventListener("mouseleave", () => {
+        card.querySelectorAll(".estrella-vote").forEach(s => s.classList.remove("hovered"));
+      });
+      star.addEventListener("click", async () => {
+        const val = +star.dataset.val;
+        await update(ref(db, `isla-social/${id}/votos`), { [uidKey]: val });
+        showToast(`Votaste ${val} ★`, "success");
+      });
+    });
+  }
+
+  // Copiar
+  card.querySelector(".btn-isla-copiar").addEventListener("click", async (e) => {
+    const txt = decodeURIComponent(e.target.dataset.contenido);
+    try { await navigator.clipboard.writeText(txt); showToast("Speech copiado", "success"); }
+    catch { showToast("No se pudo copiar", ""); }
+  });
+
+  // Guardar en Mis Speeches
+  const btnGuardar = card.querySelector(".btn-isla-guardar");
+  if (btnGuardar) {
+    btnGuardar.addEventListener("click", async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+      await push(ref(db, `mis-speeches/${user.uid}`), {
+        titulo:    data.titulo,
+        tag:       data.tag,
+        contenido: data.contenido,
+        timestamp: Date.now(),
+        fuenteId:  id,
+      });
+      showToast("Guardado en Mis Speeches ⭐", "success");
+    });
+  }
+
+  // Eliminar de Isla Social (solo el autor)
+  const btnDelIsla = card.querySelector(".btn-isla-delete");
+  if (btnDelIsla) {
+    btnDelIsla.addEventListener("click", async () => {
+      if (!confirm("¿Eliminar este speech?")) return;
+      await update(ref(db, `isla-social/${id}`), { eliminado: true });
+      card.remove();
+      showToast("Speech eliminado", "");
+    });
+  }
+
+  // Eliminar de Mis Speeches
+  const btnDelMis = card.querySelector(".btn-mis-delete");
+  if (btnDelMis) {
+    btnDelMis.addEventListener("click", async () => {
+      if (!confirm("¿Eliminar este speech?")) return;
+      const user = auth.currentUser;
+      if (!user) return;
+      await remove(ref(db, `mis-speeches/${user.uid}/${id}`));
+      card.remove();
+      const feed = document.getElementById("mis-speeches-list");
+      if (feed && feed.querySelectorAll(".isla-card").length === 0) {
+        feed.innerHTML = `<div class="isla-empty"><span>⭐</span><p>Todavía no guardaste ningún speech.<br>Guardá los que más te funcionan aquí.</p></div>`;
+      }
+      showToast("Speech eliminado", "");
+    });
+  }
+
+  container.appendChild(card);
+}
+
+// ── Publicar en Isla Social ──────────────────────────────
+document.getElementById("btn-isla-publicar").addEventListener("click", async () => {
+  const user = auth.currentUser;
+  if (!user) { showToast("Tenés que estar logueado", "error"); return; }
+  const titulo    = document.getElementById("isla-titulo").value.trim();
+  const contenido = document.getElementById("isla-contenido").value.trim();
+  const tag       = getActiveTag("isla-tag-select");
+  if (!titulo)    { showToast("Escribí un título", "error"); return; }
+  if (!contenido) { showToast("Escribí el speech", "error"); return; }
+  await push(ref(db, "isla-social"), {
+    titulo, contenido, tag,
+    uid:         user.uid,
+    autorNombre: user.email.split("@")[0],
+    timestamp:   Date.now(),
+    votos:       {},
+    eliminado:   false,
+  });
+  document.getElementById("isla-titulo").value    = "";
+  document.getElementById("isla-contenido").value = "";
+  showToast("Speech publicado 🚀", "success");
+});
+
+// ── Cargar feed Isla Social ──────────────────────────────
+let _filtroActivo = "todos";
+
+function cargarIslaFeed() {
+  const feed = document.getElementById("isla-feed");
+  if (!feed) return;
+  feed.innerHTML = "<div class='isla-loading'>Cargando...</div>";
+  onValue(ref(db, "isla-social"), (snapshot) => {
+    feed.innerHTML = "";
+    const user  = auth.currentUser;
+    const data  = snapshot.val() || {};
+    const items = Object.entries(data)
+      .filter(([, v]) => !v.eliminado)
+      .filter(([, v]) => _filtroActivo === "todos" || v.tag === _filtroActivo)
+      .sort(([, a], [, b]) => (b.timestamp || 0) - (a.timestamp || 0));
+    if (items.length === 0) {
+      feed.innerHTML = `<div class="isla-empty"><span>🌐</span><p>No hay speeches en esta categoría todavía.</p></div>`;
+      return;
+    }
+    items.forEach(([id, item]) => renderSpeechCard(id, item, user, feed, "isla"));
+  });
+}
+
+// Filtros Isla Social
+document.querySelectorAll(".isla-filtro-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".isla-filtro-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    _filtroActivo = btn.dataset.filtro;
+    cargarIslaFeed();
+  });
+});
+
+// ── Guardar Speech Personal ──────────────────────────────
+document.getElementById("btn-mis-guardar").addEventListener("click", async () => {
+  const user = auth.currentUser;
+  if (!user) { showToast("Tenés que estar logueado", "error"); return; }
+  const titulo    = document.getElementById("mis-titulo").value.trim();
+  const contenido = document.getElementById("mis-contenido").value.trim();
+  const tag       = getActiveTag("mis-tag-select");
+  if (!titulo)    { showToast("Escribí un título", "error"); return; }
+  if (!contenido) { showToast("Escribí el speech", "error"); return; }
+  await push(ref(db, `mis-speeches/${user.uid}`), {
+    titulo, contenido, tag, timestamp: Date.now()
+  });
+  document.getElementById("mis-titulo").value    = "";
+  document.getElementById("mis-contenido").value = "";
+  showToast("Speech guardado ⭐", "success");
+});
+
+// ── Cargar Mis Speeches ──────────────────────────────────
+function cargarMisSpeeches() {
+  const user = auth.currentUser;
+  if (!user) return;
+  const feed = document.getElementById("mis-speeches-list");
+  if (!feed) return;
+  feed.innerHTML = "<div class='isla-loading'>Cargando...</div>";
+  onValue(ref(db, `mis-speeches/${user.uid}`), (snapshot) => {
+    feed.innerHTML = "";
+    const data  = snapshot.val() || {};
+    const items = Object.entries(data)
+      .sort(([, a], [, b]) => (b.timestamp || 0) - (a.timestamp || 0));
+    if (items.length === 0) {
+      feed.innerHTML = `<div class="isla-empty"><span>⭐</span><p>Todavía no guardaste ningún speech.<br>Guardá los que más te funcionan aquí.</p></div>`;
+      return;
+    }
+    items.forEach(([id, item]) => renderSpeechCard(id, item, user, feed, "mis"));
+  });
+}
