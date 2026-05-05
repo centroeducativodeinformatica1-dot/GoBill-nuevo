@@ -419,7 +419,7 @@ document.getElementById("btn-generar").addEventListener("click", () => {
         ${credito > 0 ? `<div class="inv-total-row"><span>Crédito a favor</span><span>−${ARS(credito)}</span></div>` : ""}
         <div class="inv-total-row inv-total-final"><span>TOTAL A PAGAR</span><span>${ARS(total)}</span></div>
       </div>
-      <div class="inv-footer">Personal Argentina · </div>
+      <div class="inv-footer">Personal Argentina · Factura simulada no valida como  comprobante real </div>
     </div>
   `;
   document.getElementById("invoice-render").innerHTML = html;
