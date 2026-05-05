@@ -361,18 +361,18 @@
         <h2 class="card-title">✏️ Publicar un Speech</h2>
         <div class="field" style="margin-bottom:12px">
           <label>Título / Situación</label>
-          <input type="text" id="isla-titulo" placeholder="Ej: Cliente enojado por precio — lo retuve con esto" maxlength="80" />
+          <input type="text" id="isla-titulo" placeholder="" maxlength="80" />
         </div>
         <div class="field" style="margin-bottom:12px">
-          <label>Perfil del cliente</label>
+          <label>Publicar speech</label>
           <div class="isla-tags-select" id="isla-tag-select">
-            <button class="isla-tag-btn active" data-tag="General">General</button>
-            <button class="isla-tag-btn" data-tag="Positivo">😊 Positivo</button>
-            <button class="isla-tag-btn" data-tag="Negativo">😤 Negativo</button>
-            <button class="isla-tag-btn" data-tag="PortOUT">📤 PortOUT</button>
-            <button class="isla-tag-btn" data-tag="Precio">💸 Precio</button>
-            <button class="isla-tag-btn" data-tag="Cierre">🎯 Cierre</button>
-            <button class="isla-tag-btn" data-tag="Bonus">⭐ Bonus</button>
+            <button class="isla-tag-btn active" data-tag="Facturacion">Facturación</button>
+            <button class="isla-tag-btn" data-tag="Administrativo">Administrativo</button>
+            <button class="isla-tag-btn" data-tag="Pagos">Pagos</button>
+            <button class="isla-tag-btn" data-tag="Retencion">Retencion</button>
+            <button class="isla-tag-btn" data-tag="Cierre">Cierre</button>
+            <button class="isla-tag-btn" data-tag="Derivacion a encuesta">Derivacion a encuesta</button>
+            <button class="isla-tag-btn" data-tag="Otros speeches">Otros speeches</button>
           </div>
         </div>
         <div class="field" style="margin-bottom:16px">
@@ -385,17 +385,17 @@
       </div>
       <div class="isla-filtros">
         <button class="isla-filtro-btn active" data-filtro="todos">Todos</button>
-        <button class="isla-filtro-btn" data-filtro="General">General</button>
-        <button class="isla-filtro-btn" data-filtro="Positivo">😊 Positivo</button>
-        <button class="isla-filtro-btn" data-filtro="Negativo">😤 Negativo</button>
-        <button class="isla-filtro-btn" data-filtro="PortOUT">📤 PortOUT</button>
-        <button class="isla-filtro-btn" data-filtro="Precio">💸 Precio</button>
-        <button class="isla-filtro-btn" data-filtro="Cierre">🎯 Cierre</button>
-        <button class="isla-filtro-btn" data-filtro="Bonus">⭐ Bonus</button>
+        <button class="isla-filtro-btn" data-filtro="Facturacion">Facturación</button>
+        <button class="isla-filtro-btn" data-filtro="Administrativo">Administrativo</button>
+        <button class="isla-filtro-btn" data-filtro="Pagos">Pagos</button>
+        <button class="isla-filtro-btn" data-filtro="Retencion">Retencion</button>
+        <button class="isla-filtro-btn" data-filtro="Cierre">Cierre</button>
+        <button class="isla-filtro-btn" data-filtro="Derivacion a encuesta">Derivacion a encuesta</button>
+        <button class="isla-filtro-btn" data-filtro="Otros speeches">Otros speeches</button>
       </div>
       <div id="isla-feed" class="isla-feed">
         <div class="isla-empty">
-          <span>🌐</span>
+          <span></span>
           <p>Todavía no hay speeches publicados.<br>¡Sé el primero en compartir uno!</p>
         </div>
       </div>
@@ -405,7 +405,7 @@
     <div id="tab-mis-speeches" class="tab-content hidden">
       <div class="card">
         <div class="isla-hero">
-          <div class="isla-hero-icon">⭐</div>
+          <div class="isla-hero-icon"></div>
           <div>
             <h2 class="isla-title">Mis Speeches</h2>
             <p class="isla-subtitle">Guardá los speeches que más te funcionan para tenerlos siempre a mano</p>
