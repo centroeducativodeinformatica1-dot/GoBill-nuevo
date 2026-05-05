@@ -1056,7 +1056,7 @@ function renderSpeechCard(id, data, currentUser, container, tipo = "isla") {
     <div class="isla-card-header">
       <div class="isla-card-meta">
         <span class="isla-card-tag">${data.tag || "General"}</span>
-        <span class="isla-card-autor">Publicado por ${data.autorNombre || "Speech guardado de otro representante"}</span>
+        <span class="isla-card-autor">Publicado por ${data.autorNombre || "Nombre"}</span>
         <span class="isla-card-fecha">${fecha}</span>
       </div>
       ${esMio && tipo === "isla" ? `<button class="btn-isla-delete" data-id="${id}" title="Eliminar">🗑️</button>` : ""}
