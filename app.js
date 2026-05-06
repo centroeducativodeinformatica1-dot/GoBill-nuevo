@@ -118,7 +118,7 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 //  CICLOS DE FACTURACIÓN
 // ═══════════════════════════════════════════════════════════
 const CICLOS_CONFIG = {
-  7:  { emisionDia: 7,  vencMin: 1, vencMax: 4, mismoMes: true  },
+  7:  { emisionDia: 7,  vencMin: 1,  vencMax: 4,  mismoMes: false },
   14: { emisionDia: 14, vencMin: 3,  vencMax: 5,  mismoMes: false },
   21: { emisionDia: 21, vencMin: 5,  vencMax: 13, mismoMes: false },
   28: { emisionDia: 28, vencMin: 10, vencMax: 16, mismoMes: false },
@@ -533,49 +533,8 @@ document.getElementById("sim-factura").addEventListener("input", actualizarSimul
 
 // ─── SIMULADOR FORMULARIO TAB ────────────────────────────
 function actualizarSimuladorForm() {
-  const consumo    = parseFloat(document.getElementById("form-sim-consumo").value) || 0;
-  const facturaAmt = window._lastInvoice?.total || 0;
-  const nivelAct   = getNivelActual(consumo);
-  SIM_NIVELES.forEach(n => {
-    const col = document.getElementById("form-nivel-col-" + n.nivel);
-    const rei = document.getElementById("form-rei-" + n.nivel);
-    if (!col) return;
-    const activo = consumo > 0 && n.nivel <= nivelAct.nivel;
-    col.classList.toggle("nivel-activo", activo);
-    col.classList.toggle("nivel-siguiente", consumo > 0 && n.nivel === nivelAct.nivel + 1);
-    if (facturaAmt > 0) {
-      const monto = Math.min(facturaAmt * (n.pct / 100), n.tope);
-      rei.textContent = ARS(monto);
-      rei.classList.toggle("rei-activo", activo);
-    } else {
-      rei.textContent = "—";
-      rei.classList.remove("rei-activo");
-    }
-  });
-  const result = document.getElementById("form-sim-result");
-  if (consumo > 0) {
-    result.classList.remove("hidden");
-    const badge    = document.getElementById("form-sim-nivel-badge");
-    const ahorroEl = document.getElementById("form-sim-ahorro");
-    const detalle  = document.getElementById("form-sim-detalle");
-    badge.textContent = "Nivel actual: " + nivelAct.nivel;
-    badge.className   = "sim-nivel-badge n" + nivelAct.nivel;
-    ahorroEl.innerHTML = facturaAmt > 0
-      ? `Reintegro estimado: <strong>${ARS(Math.min(facturaAmt * (nivelAct.pct / 100), nivelAct.tope))}</strong>`
-      : "Generá la factura para ver el reintegro estimado";
-    const sig = SIM_NIVELES.find(n => n.nivel === nivelAct.nivel + 1);
-    detalle.textContent = sig
-      ? `Para subir al Nivel ${sig.nivel} le faltan ${ARS(sig.consumoMin - consumo)}/mes → ${sig.pct}% reintegro (tope ${ARS(sig.tope)}/mes)`
-      : "¡Nivel máximo! 25% de reintegro con tope de $7.000/mes.";
-  } else {
-    result.classList.add("hidden");
-    SIM_NIVELES.forEach(n => {
-      const col = document.getElementById("form-nivel-col-" + n.nivel);
-      if (col) col.classList.remove("nivel-activo", "nivel-siguiente");
-    });
-  }
+  // Personal Pay removido del formulario — disponible en la pestaña Speech
 }
-document.getElementById("form-sim-consumo").addEventListener("input", actualizarSimuladorForm);
 
 // ═══════════════════════════════════════════════════════════
 //  PERFILES + SPEECHES
