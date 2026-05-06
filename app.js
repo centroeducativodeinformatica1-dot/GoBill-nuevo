@@ -455,7 +455,7 @@ document.getElementById("btn-captura").addEventListener("click", async () => {
         await navigator.clipboard.write([
           new ClipboardItem({ "image/png": blob })
         ]);
-        showToast("📋 Imagen copiada — podés pegarla donde quieras", "success");
+        showToast("📋 Imagen copiada para pegarla en Yoizen", "success");
       } catch (e) {
         // Fallback: descargar si el portapapeles no está disponible
         const link = document.createElement("a");
