@@ -450,11 +450,21 @@ document.getElementById("btn-captura").addEventListener("click", async () => {
       "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.esm.min.js"
     );
     const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
-    const link = document.createElement("a");
-    link.download = `factura-${Date.now()}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-    showToast("Imagen descargada", "success");
+    canvas.toBlob(async (blob) => {
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({ "image/png": blob })
+        ]);
+        showToast("📋 Imagen copiada — podés pegarla donde quieras", "success");
+      } catch (e) {
+        // Fallback: descargar si el portapapeles no está disponible
+        const link = document.createElement("a");
+        link.download = `factura-${Date.now()}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+        showToast("No se pudo copiar — imagen descargada", "");
+      }
+    }, "image/png");
   } catch (e) {
     showToast("Usá imprimir → guardar como PDF", "");
     window.print();
