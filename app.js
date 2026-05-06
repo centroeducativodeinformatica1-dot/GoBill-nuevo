@@ -355,11 +355,12 @@ document.getElementById("btn-generar").addEventListener("click", () => {
       return `<tr>
         <td>${c.desc || "—"}</td>
         <td class="lista-col">${ARS(l)}</td>
-        <td class="desc-col">${d > 0 ? "−" + ARS(d) + " (" + p + "%)" : "—"}</td>
-        <td>${ARS(n)}</td>
+        <td class="pct-col">${p > 0 ? p + "%" : "—"}</td>
+        <td class="desc-col">${d > 0 ? '<span class=\"desc-badge\">−' + ARS(d) + '</span>' : '<span class=\"desc-empty\">—</span>'}</td>
+        <td class="subtotal-col">${ARS(n)}</td>
       </tr>`;
     }).join("");
-    return `<tr class="sec-header"><td colspan="4">${titulo}</td></tr>${rows}`;
+    return `<tr class="sec-header"><td colspan="5">${titulo}</td></tr>${rows}`;
   };
   const filasAdicionales = adicionales.filter(a => a.nombre || a.lista).map(a => {
     const l = parseFloat(a.lista) || 0;
@@ -369,12 +370,13 @@ document.getElementById("btn-generar").addEventListener("click", () => {
     return `<tr>
       <td>${a.nombre || "Adicional"}</td>
       <td class="lista-col">${ARS(l)}</td>
-      <td class="desc-col">${d > 0 ? "−" + ARS(d) + " (" + p + "%)" : "—"}</td>
-      <td>${ARS(n)}</td>
+      <td class="pct-col">${p > 0 ? p + "%" : "—"}</td>
+      <td class="desc-col">${d > 0 ? '<span class=\"desc-badge\">−' + ARS(d) + '</span>' : '<span class=\"desc-empty\">—</span>'}</td>
+      <td class="subtotal-col">${ARS(n)}</td>
     </tr>`;
   }).join("");
   const filasAdicSection = filasAdicionales
-    ? `<tr class="sec-header"><td colspan="4">🎬 Adicionales</td></tr>${filasAdicionales}` : "";
+    ? `<tr class="sec-header"><td colspan="5">🎬 Adicionales</td></tr>${filasAdicionales}` : "";
   const html = `
     <div class="inv-paper-wrap">
       <div class="inv-watermark">NO VÁLIDO COMO FACTURA</div>
@@ -400,14 +402,14 @@ document.getElementById("btn-generar").addEventListener("click", () => {
       </div>
       <table class="inv-table">
         <thead>
-          <tr><th>Concepto</th><th>Precio lista</th><th>Descuento</th><th>Subtotal</th></tr>
+          <tr><th>Concepto</th><th>Precio lista</th><th>Dto%</th><th>Descuento</th><th>Subtotal</th></tr>
         </thead>
         <tbody>
           ${filasSec("hogar", "🏠 Hogar") || ""}
           ${filasSec("movil", "📱 Móvil") || ""}
           ${filasAdicSection}
           ${(!filasSec("hogar","") && !filasSec("movil","") && !filasAdicionales)
-            ? "<tr><td colspan='4' style='text-align:center;color:#aaa'>Sin conceptos</td></tr>" : ""}
+            ? "<tr><td colspan='5' style='text-align:center;color:#aaa'>Sin conceptos</td></tr>" : ""}
         </tbody>
       </table>
       <div class="inv-totals">

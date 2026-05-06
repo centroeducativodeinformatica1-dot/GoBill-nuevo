@@ -626,7 +626,7 @@ html, body {
 .inv-meta-row strong { color: var(--gray-800); text-align: right; }
 .inv-meta-row.venc strong { color: var(--dark); font-size: .95rem; }
 
-/* Tabla factura — 4 columnas */
+/* Tabla factura — 5 columnas */
 .inv-table {
   width: 100%;
   border-collapse: collapse;
@@ -641,9 +641,18 @@ html, body {
   font-weight: 600;
   letter-spacing: .03em;
 }
+/* Col widths: Concepto flexible, resto fijos */
+.inv-table th:nth-child(1),
+.inv-table td:nth-child(1) { width: auto; }
 .inv-table th:nth-child(2),
+.inv-table td:nth-child(2) { width: 120px; text-align: right; }
 .inv-table th:nth-child(3),
-.inv-table th:nth-child(4) { text-align: right; }
+.inv-table td:nth-child(3) { width: 52px; text-align: center; }
+.inv-table th:nth-child(4),
+.inv-table td:nth-child(4) { width: 120px; text-align: right; }
+.inv-table th:nth-child(5),
+.inv-table td:nth-child(5) { width: 110px; text-align: right; }
+
 .inv-table td {
   padding: 9px 12px;
   border-bottom: 1px solid var(--gray-100);
@@ -651,19 +660,41 @@ html, body {
   vertical-align: middle;
 }
 .inv-table td.lista-col {
-  text-align: right;
   font-family: var(--mono);
-  color: var(--gray-600);
+  color: var(--gray-500, #64748b);
+}
+.inv-table td.pct-col {
+  font-family: var(--mono);
+  font-size: .8rem;
+  font-weight: 700;
+  color: #0369a1;
+  background: rgba(0,175,228,.05);
+  text-align: center;
 }
 .inv-table td.desc-col {
   text-align: right;
-  font-family: var(--mono);
-  color: #166534;
+  padding: 6px 10px;
 }
-.inv-table td:last-child {
-  text-align: right;
+.inv-table td.desc-col .desc-badge {
+  display: inline-block;
+  background: #dcfce7;
+  color: #15803d;
   font-family: var(--mono);
-  font-weight: 600;
+  font-weight: 700;
+  font-size: .82rem;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1.5px solid #86efac;
+  white-space: nowrap;
+}
+.inv-table td.desc-col .desc-empty {
+  color: var(--gray-400);
+  font-family: var(--mono);
+}
+.inv-table td.subtotal-col {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--dark);
 }
 .inv-table tr:last-child td { border-bottom: none; }
 .inv-table tr.sec-header td {
