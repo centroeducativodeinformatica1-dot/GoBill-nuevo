@@ -185,12 +185,18 @@ function renderSeccion(sec) {
       `<button class="btn-promo-dur-inline ${c.meses === m ? 'active' : ''}" data-m="${m}">${m === "otro" ? "Otro" : m + "m"}</button>`
     ).join("");
 
-    // Calcular vencimiento si hay fecha y meses
-    const mesesNum = c.meses === "otro" ? parseInt(c.mesesCustom) : parseInt(c.meses);
+    const mesesNumA_calc = c.meses === "otro" ? parseInt(c.mesesCustom) : parseInt(c.meses);
+    // Si hay meses seleccionados y no hay fecha, poner hoy por defecto
+    if (c.meses && !c.promoDesde) {
+      const hoy = new Date();
+      c.promoDesde = hoy.toISOString().split("T")[0];
+      secciones[sec][i].promoDesde = c.promoDesde;
+    }
     let promoVencLabel = "";
-    if (c.promoDesde && mesesNum > 0) {
+    if (c.promoDesde && mesesNumA_calc > 0) {
       const [y, mo, d] = c.promoDesde.split("-").map(Number);
-      const hasta = new Date(y, mo - 1 + mesesNum, d);
+      const hasta = new Date(y, mo - 1 + mesesNumA_calc, d);
+      hasta.setDate(hasta.getDate() - 1); // 1 día antes
       const dd = String(hasta.getDate()).padStart(2,"0");
       const mm = String(hasta.getMonth()+1).padStart(2,"0");
       const yy = hasta.getFullYear();
@@ -314,10 +320,17 @@ function renderAdicionales() {
     ).join("");
 
     const mesesNumA = a.meses === "otro" ? parseInt(a.mesesCustom) : parseInt(a.meses);
+    // Si hay meses seleccionados y no hay fecha, poner hoy por defecto
+    if (a.meses && !a.promoDesde) {
+      const hoy = new Date();
+      a.promoDesde = hoy.toISOString().split("T")[0];
+      adicionales[i].promoDesde = a.promoDesde;
+    }
     let promoVencLabelA = "";
     if (a.promoDesde && mesesNumA > 0) {
       const [y, mo, d] = a.promoDesde.split("-").map(Number);
       const hasta = new Date(y, mo - 1 + mesesNumA, d);
+      hasta.setDate(hasta.getDate() - 1); // 1 día antes
       const dd = String(hasta.getDate()).padStart(2,"0");
       const mm = String(hasta.getMonth()+1).padStart(2,"0");
       const yy = hasta.getFullYear();
