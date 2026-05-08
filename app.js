@@ -1411,6 +1411,7 @@ function cargarBiblioteca() {
   galeria.innerHTML = "<div class='isla-loading'>Cargando...</div>";
   onValue(ref(db, "biblioteca"), (snapshot) => {
     galeria.innerHTML = "";
+    const currentUser = auth.currentUser;
     const data = snapshot.val() || {};
     let items = Object.entries(data)
       .sort(([, a], [, b]) => (b.timestamp || 0) - (a.timestamp || 0));
@@ -1422,15 +1423,17 @@ function cargarBiblioteca() {
       return;
     }
     items.forEach(([id, item]) => {
+      const esMia = currentUser && item.uid === currentUser.uid;
       const el = document.createElement("div");
       el.className = "biblioteca-item";
       el.innerHTML = `
         <img src="${item.url}" alt="${item.cat}" loading="lazy" />
         <div class="biblioteca-item-bar">
-          <span class="biblioteca-item-cat">${item.cat}</span>
+          <span class="biblioteca-item-cat">${item.cat}${item.nombre ? ` · ${item.nombre}` : ""}</span>
           <div class="biblioteca-item-actions">
             <button class="btn-bib-copiar">Copiar</button>
             <button class="btn-bib-descargar">Descargar</button>
+            ${esMia ? `<button class="btn-bib-eliminar" title="Eliminar">✕</button>` : ""}
           </div>
         </div>
       `;
@@ -1447,6 +1450,13 @@ function cargarBiblioteca() {
         const a = document.createElement("a");
         a.href = item.url; a.download = item.cat + ".jpg"; a.target = "_blank"; a.click();
       });
+      if (esMia) {
+        el.querySelector(".btn-bib-eliminar").addEventListener("click", async () => {
+          if (!confirm("¿Eliminar esta imagen?")) return;
+          await remove(ref(db, `biblioteca/${id}`));
+          showToast("Imagen eliminada", "success");
+        });
+      }
       galeria.appendChild(el);
     });
   });
@@ -1457,20 +1467,22 @@ function cargarBiblioteca() {
 // ═══════════════════════════════════════════════════════════
 const TUTORIALES = {
   facturacion: [
-    { titulo: "Facturación General", descripcion: "Todo lo que necesitás saber sobre la factura de Personal.", src: "assets/tutoriales/facturacion/facturacion-general.mp4" },
+    { titulo: "Cómo leer mi factura", descripcion: "Entendé cada ítem de tu factura de Personal paso a paso.", src: "assets/tutoriales/facturacion/como-leer-factura.mp4" },
   ],
   smarthome: [
-    { titulo: "Smarthome General", descripcion: "Introducción a los productos y servicios Smarthome.", src: "assets/tutoriales/smarthome/smarthome-general.mp4" },
+    { titulo: "Cómo configurar la cámara y usar la app", descripcion: "Configuración de cámara y recorrido por la aplicación Smarthome.", src: "assets/tutoriales/smarthome/configurar-camara-y-app.mp4" },
+    { titulo: "Cómo instalar sensores de apertura y movimiento", descripcion: "Instalación paso a paso de sensores de apertura y movimiento.", src: "assets/tutoriales/smarthome/sensores-apertura-movimiento.mp4" },
+    { titulo: "Cómo instalar sensores de agua y humo", descripcion: "Instalación paso a paso de sensores de agua y humo.", src: "assets/tutoriales/smarthome/sensores-agua-humo.mp4" },
   ],
   tecnico: [
-    { titulo: "Técnico General", descripcion: "Diagnóstico y resolución de problemas técnicos.", src: "assets/tutoriales/tecnico/tecnico-general.mp4" },
+    { titulo: "Cómo instalar Extensor Wifi", descripcion: "Instalación y configuración del extensor de señal Wifi.", src: "assets/tutoriales/tecnico/instalar-extensor-wifi.mp4" },
+    { titulo: "Cómo saber si tu Android tiene 5G activado", descripcion: "Verificá y activá 5G en tu dispositivo Android.", src: "assets/tutoriales/tecnico/android-5g.mp4" },
+    { titulo: "Cómo saber si tu iPhone tiene 5G activado", descripcion: "Verificá y activá 5G en tu iPhone.", src: "assets/tutoriales/tecnico/iphone-5g.mp4" },
+    { titulo: "Cómo cambiar a eSIM desde la app Mi Personal", descripcion: "Paso a paso para migrar tu línea a eSIM desde la app.", src: "assets/tutoriales/tecnico/cambiar-esim-app.mp4" },
+    { titulo: "Wifi Zone", descripcion: "Cómo activar y usar Wifi Zone con tu línea Personal.", src: "assets/tutoriales/tecnico/wifi-zone.mp4" },
   ],
-  prepago: [
-    { titulo: "Prepago General", descripcion: "Gestión de líneas y recargas prepago.", src: "assets/tutoriales/prepago/prepago-general.mp4" },
-  ],
-  retencion: [
-    { titulo: "Retención General", descripcion: "Estrategias y técnicas de retención de clientes.", src: "assets/tutoriales/retencion/retencion-general.mp4" },
-  ],
+  prepago: [],
+  retencion: [],
 };
 
 function renderTutoriales(seccion) {
