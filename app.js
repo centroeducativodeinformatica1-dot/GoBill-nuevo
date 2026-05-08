@@ -160,8 +160,8 @@ document.querySelectorAll(".btn-ciclo").forEach(btn => {
 //  SECCIONES: HOGAR / MÓVIL
 // ═══════════════════════════════════════════════════════════
 const secciones = {
-  hogar: [{ desc: "", lista: "", final: "", pct: "", meses: "" }],
-  movil: [{ desc: "", lista: "", final: "", pct: "", meses: "" }],
+  hogar: [{ desc: "", lista: "", final: "", pct: "", meses: "", mesesCustom: "", promoDesde: "" }],
+  movil: [{ desc: "", lista: "", final: "", pct: "", meses: "", mesesCustom: "", promoDesde: "" }],
 };
 
 function renderSeccion(sec) {
@@ -184,6 +184,22 @@ function renderSeccion(sec) {
     const mesesBtns = mesesOpts.map(m =>
       `<button class="btn-promo-dur-inline ${c.meses === m ? 'active' : ''}" data-m="${m}">${m === "otro" ? "Otro" : m + "m"}</button>`
     ).join("");
+
+    // Calcular vencimiento si hay fecha y meses
+    const mesesNum = c.meses === "otro" ? parseInt(c.mesesCustom) : parseInt(c.meses);
+    let promoVencLabel = "";
+    if (c.promoDesde && mesesNum > 0) {
+      const [y, mo, d] = c.promoDesde.split("-").map(Number);
+      const hasta = new Date(y, mo - 1 + mesesNum, d);
+      const dd = String(hasta.getDate()).padStart(2,"0");
+      const mm = String(hasta.getMonth()+1).padStart(2,"0");
+      const yy = hasta.getFullYear();
+      promoVencLabel = `Vence: ${dd}/${mm}/${yy}`;
+      secciones[sec][i].promoHasta = `${dd}/${mm}/${yy}`;
+    } else {
+      secciones[sec][i].promoHasta = "";
+    }
+
     row.innerHTML =
       `<div class="concepto-main-row">` +
       `<input type="text" placeholder="Descripción" value="${c.desc}" data-sec="${sec}" data-i="${i}" data-k="desc" />` +
@@ -197,7 +213,8 @@ function renderSeccion(sec) {
       `<span class="concepto-promo-label">Promo:</span>` +
       `<div class="concepto-promo-btns">${mesesBtns}</div>` +
       `<input type="number" placeholder="meses" class="concepto-promo-custom ${c.meses === 'otro' ? '' : 'hidden'}" value="${c.mesesCustom || ''}" min="1" max="60" data-sec="${sec}" data-i="${i}" />` +
-      `<span class="concepto-promo-hint">${c.meses && c.meses !== 'otro' ? c.meses + ' meses' : (c.meses === 'otro' && c.mesesCustom ? c.mesesCustom + ' meses' : '')}</span>` +
+      `${c.meses ? `<input type="date" class="concepto-promo-desde" value="${c.promoDesde || ''}" title="Inicio de promo" />` : ""}` +
+      `${promoVencLabel ? `<span class="concepto-promo-venc">${promoVencLabel}</span>` : ""}` +
       `</div>`;
     list.appendChild(row);
 
@@ -222,7 +239,17 @@ function renderSeccion(sec) {
     const customInput = row.querySelector(".concepto-promo-custom");
     customInput.addEventListener("change", e => {
       secciones[sec][i].mesesCustom = e.target.value;
+      renderSeccion(sec);
     });
+
+    // Fecha inicio promo
+    const desdeInput = row.querySelector(".concepto-promo-desde");
+    if (desdeInput) {
+      desdeInput.addEventListener("change", e => {
+        secciones[sec][i].promoDesde = e.target.value;
+        renderSeccion(sec);
+      });
+    }
 
     const inputFinal = row.querySelector('[data-k="final"]');
     const inputLista = row.querySelector('[data-k="lista"]');
@@ -285,6 +312,21 @@ function renderAdicionales() {
     const mesesBtns = mesesOpts.map(m =>
       `<button class="btn-promo-dur-inline ${a.meses === m ? 'active' : ''}" data-m="${m}">${m === "otro" ? "Otro" : m + "m"}</button>`
     ).join("");
+
+    const mesesNumA = a.meses === "otro" ? parseInt(a.mesesCustom) : parseInt(a.meses);
+    let promoVencLabelA = "";
+    if (a.promoDesde && mesesNumA > 0) {
+      const [y, mo, d] = a.promoDesde.split("-").map(Number);
+      const hasta = new Date(y, mo - 1 + mesesNumA, d);
+      const dd = String(hasta.getDate()).padStart(2,"0");
+      const mm = String(hasta.getMonth()+1).padStart(2,"0");
+      const yy = hasta.getFullYear();
+      promoVencLabelA = `Vence: ${dd}/${mm}/${yy}`;
+      adicionales[i].promoHasta = `${dd}/${mm}/${yy}`;
+    } else {
+      adicionales[i].promoHasta = "";
+    }
+
     row.innerHTML =
       `<div class="concepto-main-row">` +
       `<span class="adicional-nombre">` +
@@ -300,7 +342,8 @@ function renderAdicionales() {
       `<span class="concepto-promo-label">Promo:</span>` +
       `<div class="concepto-promo-btns">${mesesBtns}</div>` +
       `<input type="number" placeholder="meses" class="concepto-promo-custom ${a.meses === 'otro' ? '' : 'hidden'}" value="${a.mesesCustom || ''}" min="1" max="60" />` +
-      `<span class="concepto-promo-hint">${a.meses && a.meses !== 'otro' ? a.meses + ' meses' : (a.meses === 'otro' && a.mesesCustom ? a.mesesCustom + ' meses' : '')}</span>` +
+      `${a.meses ? `<input type="date" class="concepto-promo-desde" value="${a.promoDesde || ''}" title="Inicio de promo" />` : ""}` +
+      `${promoVencLabelA ? `<span class="concepto-promo-venc">${promoVencLabelA}</span>` : ""}` +
       `</div>`;
     list.appendChild(row);
 
@@ -317,7 +360,16 @@ function renderAdicionales() {
 
     row.querySelector(".concepto-promo-custom").addEventListener("change", e => {
       adicionales[i].mesesCustom = e.target.value;
+      renderAdicionales();
     });
+
+    const desdeInputA = row.querySelector(".concepto-promo-desde");
+    if (desdeInputA) {
+      desdeInputA.addEventListener("change", e => {
+        adicionales[i].promoDesde = e.target.value;
+        renderAdicionales();
+      });
+    }
   });
   list.querySelectorAll("input[data-k]").forEach(inp => {
     inp.addEventListener("change", e => {
@@ -418,8 +470,11 @@ document.getElementById("btn-generar").addEventListener("click", () => {
       const d = l * p / 100;
       const n = l - d;
       const mesesLabel = c.meses && c.meses !== "otro" ? c.meses + " meses" : (c.meses === "otro" && c.mesesCustom ? c.mesesCustom + " meses" : "");
+      const promoTag = mesesLabel
+        ? `<span class="inv-promo-tag">${mesesLabel}${c.promoHasta ? ` · vence ${c.promoHasta}` : ""}</span>`
+        : "";
       return `<tr>
-        <td>${c.desc || "—"}${mesesLabel ? `<span class="inv-promo-tag">${mesesLabel}</span>` : ""}</td>
+        <td>${c.desc || "—"}${promoTag}</td>
         <td class="lista-col">${ARS(l)}</td>
         <td class="pct-col">${p > 0 ? p + "%" : "—"}</td>
         <td class="desc-col">${d > 0 ? '<span class=\"desc-badge\">−' + ARS(d) + '</span>' : '<span class=\"desc-empty\">—</span>'}</td>
@@ -434,8 +489,11 @@ document.getElementById("btn-generar").addEventListener("click", () => {
     const d = l * p / 100;
     const n = l - d;
     const mesesLabel = a.meses && a.meses !== "otro" ? a.meses + " meses" : (a.meses === "otro" && a.mesesCustom ? a.mesesCustom + " meses" : "");
+    const promoTagA = mesesLabel
+      ? `<span class="inv-promo-tag">${mesesLabel}${a.promoHasta ? ` · vence ${a.promoHasta}` : ""}</span>`
+      : "";
     return `<tr>
-      <td>${a.nombre || "Adicional"}${mesesLabel ? `<span class="inv-promo-tag">${mesesLabel}</span>` : ""}</td>
+      <td>${a.nombre || "Adicional"}${promoTagA}</td>
       <td class="lista-col">${ARS(l)}</td>
       <td class="pct-col">${p > 0 ? p + "%" : "—"}</td>
       <td class="desc-col">${d > 0 ? '<span class=\"desc-badge\">−' + ARS(d) + '</span>' : '<span class=\"desc-empty\">—</span>'}</td>
