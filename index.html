@@ -35,6 +35,7 @@
         <button class="tab-btn" data-tab="speech">Speech</button>
         <button class="tab-btn" data-tab="isla-social">Isla Social</button>
         <button class="tab-btn" data-tab="mis-speeches">Mis Speeches</button>
+        <button class="tab-btn" data-tab="biblioteca">Biblioteca</button>
         <button class="tab-btn" data-tab="tutoriales">Tutoriales</button>
       </div>
       <div class="nav-user">
@@ -48,16 +49,11 @@
       <div class="card">
         <h2 class="card-title">Datos del Cliente</h2>
         <div class="form-grid form-grid-2">
-          <div class="field">
-            <label>Nombre y Apellido</label>
-            <input type="text" id="f-nombre" placeholder="Juan Pérez" />
-          </div>
-          <div class="field">
-            <label>Nro. de cuenta</label>
-            <input type="text" id="f-cuenta" placeholder="0800-123456" />
-          </div>
+          <div class="field"><label>Nombre y Apellido</label><input type="text" id="f-nombre" placeholder="Juan Pérez" /></div>
+          <div class="field"><label>Nro. de cuenta</label><input type="text" id="f-cuenta" placeholder="0800-123456" /></div>
         </div>
       </div>
+
       <div class="card">
         <h2 class="card-title">Datos de la Factura</h2>
         <div class="field" style="margin-bottom:14px">
@@ -70,68 +66,24 @@
           </div>
         </div>
         <div class="form-grid form-grid-2">
-          <div class="field">
-            <label>Período facturado</label>
-            <input type="text" id="f-periodo" placeholder="Se autocompletará" readonly />
-          </div>
-          <div class="field">
-            <label>Nro. de factura</label>
-            <input type="text" id="f-nrofactura" placeholder="0001-00012345" />
-          </div>
-          <div class="field">
-            <label>Fecha de emisión</label>
-            <input type="date" id="f-fecha" readonly />
-          </div>
-          <div class="field">
-            <label>Fecha de vencimiento</label>
-            <input type="date" id="f-vencimiento" readonly />
-          </div>
+          <div class="field"><label>Período facturado</label><input type="text" id="f-periodo" placeholder="Se autocompletará" readonly /></div>
+          <div class="field"><label>Nro. de factura</label><input type="text" id="f-nrofactura" placeholder="0001-00012345" /></div>
+          <div class="field"><label>Fecha de emisión</label><input type="date" id="f-fecha" readonly /></div>
+          <div class="field"><label>Fecha de vencimiento</label><input type="date" id="f-vencimiento" readonly /></div>
         </div>
         <p id="ciclo-hint" class="ciclo-hint">Seleccioná un ciclo para autocompletar las fechas</p>
       </div>
 
-      <!-- DURACIÓN DE PROMOCIÓN -->
-      <div class="card">
-        <h2 class="card-title">Duración de Promoción</h2>
-        <div class="field" style="margin-bottom:14px">
-          <label>Duración</label>
-          <div class="promo-duracion-btns">
-            <button class="btn-promo-dur" data-meses="3">3 meses</button>
-            <button class="btn-promo-dur" data-meses="6">6 meses</button>
-            <button class="btn-promo-dur" data-meses="12">12 meses</button>
-            <button class="btn-promo-dur" data-meses="otro">Otro</button>
-          </div>
-        </div>
-        <div id="promo-otro-wrap" class="field hidden" style="margin-bottom:14px">
-          <label>Cantidad de meses</label>
-          <input type="number" id="f-promo-meses-custom" placeholder="Ej: 9" min="1" max="60" />
-        </div>
-        <div class="form-grid form-grid-2">
-          <div class="field">
-            <label>Vigencia desde</label>
-            <input type="date" id="f-promo-desde" />
-          </div>
-          <div class="field">
-            <label>Vencimiento de promo</label>
-            <input type="text" id="f-promo-hasta" placeholder="Se calculará automáticamente" readonly />
-          </div>
-        </div>
-        <p id="promo-hint" class="ciclo-hint">Seleccioná duración y fecha de inicio para calcular el vencimiento</p>
-      </div>
-
       <div class="card">
         <h2 class="card-title">🏠 Hogar</h2>
-        <div class="conceptos-header">
-          <span>Descripción</span><span>$ Final</span><span>Dto %</span><span>$ Lista</span><span>Neto</span><span></span>
-        </div>
+        <div class="conceptos-header"><span>Descripción</span><span>$ Final</span><span>Dto %</span><span>$ Lista</span><span>Neto</span><span></span></div>
         <div id="conceptos-hogar"></div>
         <button class="btn-add" data-seccion="hogar">+ Agregar línea</button>
       </div>
+
       <div class="card">
         <h2 class="card-title">📱 Móvil</h2>
-        <div class="conceptos-header">
-          <span>Descripción</span><span>$ Final</span><span>Dto %</span><span>$ Lista</span><span>Neto</span><span></span>
-        </div>
+        <div class="conceptos-header"><span>Descripción</span><span>$ Final</span><span>Dto %</span><span>$ Lista</span><span>Neto</span><span></span></div>
         <div id="conceptos-movil"></div>
         <button class="btn-add" data-seccion="movil">+ Agregar línea</button>
       </div>
@@ -140,30 +92,14 @@
         <h2 class="card-title">🎬 Adicionales</h2>
         <div id="adicionales-list" class="adicionales-list"></div>
         <div class="adicionales-preset">
-          <button class="btn-preset" data-nombre="Netflix" data-precio="0" data-logo="assets/netflix.png">
-            <img class="preset-logo" src="assets/netflix.png" onerror="this.style.display='none'" />Netflix
-          </button>
-          <button class="btn-preset" data-nombre="Disney+ Estándar" data-precio="12299" data-logo="assets/disney.png">
-            <img class="preset-logo" src="assets/disney.png" onerror="this.style.display='none'" />Disney+ Est.
-          </button>
-          <button class="btn-preset" data-nombre="Disney+ Premium" data-precio="18399" data-logo="assets/disney.png">
-            <img class="preset-logo" src="assets/disney.png" onerror="this.style.display='none'" />Disney+ Prem.
-          </button>
-          <button class="btn-preset" data-nombre="Pack HBO" data-precio="11420" data-logo="assets/hbo.png">
-            <img class="preset-logo" src="assets/hbo.png" onerror="this.style.display='none'" />Pack HBO
-          </button>
-          <button class="btn-preset" data-nombre="Paramount+" data-precio="0" data-logo="assets/paramount.png">
-            <img class="preset-logo" src="assets/paramount.png" onerror="this.style.display='none'" />Paramount+
-          </button>
-          <button class="btn-preset" data-nombre="Pack Fútbol" data-precio="23350" data-logo="assets/pack-futbol.png">
-            <img class="preset-logo" src="assets/pack-futbol.png" onerror="this.style.display='none'" />Pack Fútbol
-          </button>
-          <button class="btn-preset" data-nombre="Universal+" data-precio="11420" data-logo="assets/universal.png">
-            <img class="preset-logo" src="assets/universal.png" onerror="this.style.display='none'" />Universal+
-          </button>
-          <button class="btn-preset" data-nombre="Pack 3 Premium" data-precio="13355" data-logo="assets/pack3premium.png">
-            <img class="preset-logo" src="assets/pack3premium.png" onerror="this.style.display='none'" />Pack 3 Prem.
-          </button>
+          <button class="btn-preset" data-nombre="Netflix" data-precio="0" data-logo="assets/netflix.png"><img class="preset-logo" src="assets/netflix.png" onerror="this.style.display='none'" />Netflix</button>
+          <button class="btn-preset" data-nombre="Disney+ Estándar" data-precio="12299" data-logo="assets/disney.png"><img class="preset-logo" src="assets/disney.png" onerror="this.style.display='none'" />Disney+ Est.</button>
+          <button class="btn-preset" data-nombre="Disney+ Premium" data-precio="18399" data-logo="assets/disney.png"><img class="preset-logo" src="assets/disney.png" onerror="this.style.display='none'" />Disney+ Prem.</button>
+          <button class="btn-preset" data-nombre="Pack HBO" data-precio="11420" data-logo="assets/hbo.png"><img class="preset-logo" src="assets/hbo.png" onerror="this.style.display='none'" />Pack HBO</button>
+          <button class="btn-preset" data-nombre="Paramount+" data-precio="0" data-logo="assets/paramount.png"><img class="preset-logo" src="assets/paramount.png" onerror="this.style.display='none'" />Paramount+</button>
+          <button class="btn-preset" data-nombre="Pack Fútbol" data-precio="23350" data-logo="assets/pack-futbol.png"><img class="preset-logo" src="assets/pack-futbol.png" onerror="this.style.display='none'" />Pack Fútbol</button>
+          <button class="btn-preset" data-nombre="Universal+" data-precio="11420" data-logo="assets/universal.png"><img class="preset-logo" src="assets/universal.png" onerror="this.style.display='none'" />Universal+</button>
+          <button class="btn-preset" data-nombre="Pack 3 Premium" data-precio="13355" data-logo="assets/pack3premium.png"><img class="preset-logo" src="assets/pack3premium.png" onerror="this.style.display='none'" />Pack 3 Prem.</button>
           <button class="btn-preset" data-nombre="" data-precio="0" data-logo="">+ Personalizado</button>
         </div>
       </div>
@@ -171,23 +107,15 @@
       <div class="card">
         <h2 class="card-title">🔗 Descuento Conexión Total</h2>
         <div class="form-grid form-grid-2">
-          <div class="field">
-            <label>Descuento nominal ($)</label>
-            <input type="number" id="f-descuento-ct" placeholder="0" min="0" />
-          </div>
+          <div class="field"><label>Descuento nominal ($)</label><input type="number" id="f-descuento-ct" placeholder="0" min="0" /></div>
         </div>
       </div>
+
       <div class="card">
         <h2 class="card-title">Ajustes</h2>
         <div class="form-grid form-grid-2">
-          <div class="field">
-            <label>Crédito a favor ($)</label>
-            <input type="number" id="f-credito" placeholder="0" min="0" />
-          </div>
-          <div class="field">
-            <label>Mora / Interés ($)</label>
-            <input type="number" id="f-mora" placeholder="0" min="0" />
-          </div>
+          <div class="field"><label>Crédito a favor ($)</label><input type="number" id="f-credito" placeholder="0" min="0" /></div>
+          <div class="field"><label>Mora / Interés ($)</label><input type="number" id="f-mora" placeholder="0" min="0" /></div>
         </div>
       </div>
       <div class="actions-row">
@@ -261,14 +189,8 @@
         <h2 class="card-title">Simulador Personal Pay</h2>
         <p class="speech-hint">Ingresá el consumo mensual del cliente para ver a qué nivel accede y cuánto ahorra</p>
         <div class="sim-input-row">
-          <div class="field" style="flex:1">
-            <label>Consumo mensual del cliente ($)</label>
-            <input type="number" id="sim-consumo" placeholder="Ej: 150000" min="0" />
-          </div>
-          <div class="field" style="flex:1">
-            <label>Monto de factura Personal ($)</label>
-            <input type="number" id="sim-factura" placeholder="Ej: 25000" min="0" />
-          </div>
+          <div class="field" style="flex:1"><label>Consumo mensual del cliente ($)</label><input type="number" id="sim-consumo" placeholder="Ej: 150000" min="0" /></div>
+          <div class="field" style="flex:1"><label>Monto de factura Personal ($)</label><input type="number" id="sim-factura" placeholder="Ej: 25000" min="0" /></div>
         </div>
         <div class="niveles-table">
           <div class="nivel-col header-col">
@@ -330,20 +252,14 @@
       <div class="card isla-header-card">
         <div class="isla-hero">
           <div class="isla-hero-icon"></div>
-          <div>
-            <h2 class="isla-title">Isla Social</h2>
-            <p class="isla-subtitle">Compartí speeches que te funcionaron y ayudá a otros representantes</p>
-          </div>
+          <div><h2 class="isla-title">Isla Social</h2><p class="isla-subtitle">Compartí speeches que te funcionaron y ayudá a otros representantes</p></div>
         </div>
       </div>
       <div class="card">
         <h2 class="card-title">✏️ Publicar un Speech</h2>
+        <div class="field" style="margin-bottom:12px"><label>Título / Situación</label><input type="text" id="isla-titulo" placeholder="" maxlength="80" /></div>
         <div class="field" style="margin-bottom:12px">
-          <label>Título / Situación</label>
-          <input type="text" id="isla-titulo" placeholder="" maxlength="80" />
-        </div>
-        <div class="field" style="margin-bottom:12px">
-          <label>Publicar speech</label>
+          <label>Categoría</label>
           <div class="isla-tags-select" id="isla-tag-select">
             <button class="isla-tag-btn active" data-tag="Facturacion">Facturación</button>
             <button class="isla-tag-btn" data-tag="Administrativo">Administrativo</button>
@@ -354,13 +270,8 @@
             <button class="isla-tag-btn" data-tag="Otros speeches">Otros speeches</button>
           </div>
         </div>
-        <div class="field" style="margin-bottom:16px">
-          <label>Speech / Mensaje</label>
-          <textarea id="isla-contenido" placeholder="" rows="5" class="isla-textarea"></textarea>
-        </div>
-        <div class="actions-row">
-          <button class="btn-primary" id="btn-isla-publicar">Publicar Speech</button>
-        </div>
+        <div class="field" style="margin-bottom:16px"><label>Speech / Mensaje</label><textarea id="isla-contenido" placeholder="" rows="5" class="isla-textarea"></textarea></div>
+        <div class="actions-row"><button class="btn-primary" id="btn-isla-publicar">Publicar Speech</button></div>
       </div>
       <div class="isla-filtros">
         <button class="isla-filtro-btn active" data-filtro="todos">Todos</button>
@@ -373,119 +284,89 @@
         <button class="isla-filtro-btn" data-filtro="Otros speeches">Otros speeches</button>
       </div>
       <div id="isla-feed" class="isla-feed">
-        <div class="isla-empty">
-          <span></span>
-          <p>Todavía no hay speeches publicados.<br>¡Sé el primero en compartir uno!</p>
-        </div>
+        <div class="isla-empty"><span></span><p>Todavía no hay speeches publicados.<br>¡Sé el primero en compartir uno!</p></div>
       </div>
     </div>
 
     <!-- TAB: MIS SPEECHES -->
     <div id="tab-mis-speeches" class="tab-content hidden">
-      <div class="mis-speeches-layout">
-        <!-- Panel izquierdo: Speeches -->
-        <div class="mis-speeches-panel">
-          <div class="card">
-            <div class="isla-hero">
-              <div class="isla-hero-icon"></div>
-              <div>
-                <h2 class="isla-title">Mis Speeches</h2>
-                <p class="isla-subtitle"></p>
-              </div>
-            </div>
-          </div>
-          <div class="card">
-            <h2 class="card-title">Guardar Speech</h2>
-            <div class="field" style="margin-bottom:12px">
-              <label>Título</label>
-              <input type="text" id="mis-titulo" placeholder="" maxlength="80" />
-            </div>
-            <div class="field" style="margin-bottom:12px">
-              <label>Categoría</label>
-              <div class="isla-tags-select" id="mis-tag-select">
-                <button class="isla-tag-btn active" data-tag="Facturacion">Facturación</button>
-                <button class="isla-tag-btn" data-tag="Apertura">Apertura</button>
-                <button class="isla-tag-btn" data-tag="Administrativo">Administrativo</button>
-                <button class="isla-tag-btn" data-tag="Pagos">Pagos</button>
-                <button class="isla-tag-btn" data-tag="Retencion">Retencion</button>
-                <button class="isla-tag-btn" data-tag="Cierre">Cierre</button>
-              </div>
-            </div>
-            <div class="field" style="margin-bottom:16px">
-              <label>Speech</label>
-              <textarea id="mis-contenido" placeholder="" rows="5" class="isla-textarea"></textarea>
-            </div>
-            <div class="actions-row">
-              <button class="btn-primary" id="btn-mis-guardar">Guardar Speech</button>
-            </div>
-          </div>
-
-          <!-- Filtros por sección -->
-          <div class="isla-filtros">
-            <button class="mis-filtro-btn active" data-filtro="todos">Todos</button>
-            <button class="mis-filtro-btn" data-filtro="Facturacion">Facturación</button>
-            <button class="mis-filtro-btn" data-filtro="Apertura">Apertura</button>
-            <button class="mis-filtro-btn" data-filtro="Administrativo">Administrativo</button>
-            <button class="mis-filtro-btn" data-filtro="Pagos">Pagos</button>
-            <button class="mis-filtro-btn" data-filtro="Retencion">Retencion</button>
-            <button class="mis-filtro-btn" data-filtro="Cierre">Cierre</button>
-          </div>
-
-          <div id="mis-speeches-list" class="isla-feed">
-            <div class="isla-empty">
-              <span></span>
-              <p>Todavía no guardaste ningún speech.<br></p>
-            </div>
+      <div class="card">
+        <div class="isla-hero">
+          <div class="isla-hero-icon"></div>
+          <div><h2 class="isla-title">Mis Speeches</h2><p class="isla-subtitle"></p></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2 class="card-title">Guardar Speech</h2>
+        <div class="field" style="margin-bottom:12px"><label>Título</label><input type="text" id="mis-titulo" placeholder="" maxlength="80" /></div>
+        <div class="field" style="margin-bottom:12px">
+          <label>Categoría</label>
+          <div class="isla-tags-select" id="mis-tag-select">
+            <button class="isla-tag-btn active" data-tag="Facturacion">Facturación</button>
+            <button class="isla-tag-btn" data-tag="Apertura">Apertura</button>
+            <button class="isla-tag-btn" data-tag="Administrativo">Administrativo</button>
+            <button class="isla-tag-btn" data-tag="Pagos">Pagos</button>
+            <button class="isla-tag-btn" data-tag="Retencion">Retencion</button>
+            <button class="isla-tag-btn" data-tag="Cierre">Cierre</button>
           </div>
         </div>
+        <div class="field" style="margin-bottom:16px"><label>Speech</label><textarea id="mis-contenido" placeholder="" rows="5" class="isla-textarea"></textarea></div>
+        <div class="actions-row"><button class="btn-primary" id="btn-mis-guardar">Guardar Speech</button></div>
+      </div>
+      <div class="isla-filtros">
+        <button class="mis-filtro-btn active" data-filtro="todos">Todos</button>
+        <button class="mis-filtro-btn" data-filtro="Facturacion">Facturación</button>
+        <button class="mis-filtro-btn" data-filtro="Apertura">Apertura</button>
+        <button class="mis-filtro-btn" data-filtro="Administrativo">Administrativo</button>
+        <button class="mis-filtro-btn" data-filtro="Pagos">Pagos</button>
+        <button class="mis-filtro-btn" data-filtro="Retencion">Retencion</button>
+        <button class="mis-filtro-btn" data-filtro="Cierre">Cierre</button>
+      </div>
+      <div id="mis-speeches-list" class="isla-feed">
+        <div class="isla-empty"><span></span><p>Todavía no guardaste ningún speech.</p></div>
+      </div>
+    </div>
 
-        <!-- Panel derecho: Biblioteca de imágenes -->
-        <div class="biblioteca-panel">
-          <div class="card biblioteca-card">
-            <h2 class="card-title">Biblioteca de Imágenes</h2>
-            <p class="biblioteca-desc">Subí imágenes útiles para compartir con el equipo</p>
-
-            <!-- Subir imagen -->
-            <div class="biblioteca-upload-area" id="biblioteca-upload-area">
-              <input type="file" id="biblioteca-file-input" accept="image/*" multiple style="display:none" />
-              <div class="biblioteca-drop-zone" id="biblioteca-drop-zone">
-                <div class="biblioteca-drop-icon">+</div>
-                <p>Arrastrá imágenes o hacé click para subir</p>
-                <button class="btn-secondary btn-sm" id="btn-biblioteca-upload">Seleccionar imágenes</button>
-              </div>
-            </div>
-
-            <!-- Filtro por categoría -->
-            <div class="biblioteca-cats" id="biblioteca-cats">
-              <button class="biblioteca-cat-btn active" data-cat="todos">Todas</button>
-              <button class="biblioteca-cat-btn" data-cat="promos">Promos</button>
-              <button class="biblioteca-cat-btn" data-cat="objeciones">Objeciones</button>
-              <button class="biblioteca-cat-btn" data-cat="productos">Productos</button>
-              <button class="biblioteca-cat-btn" data-cat="otros">Otros</button>
-            </div>
-
-            <!-- Selector de categoría al subir -->
-            <div id="biblioteca-pending-wrap" class="hidden">
-              <div class="biblioteca-pending-label">Categoría para las imágenes seleccionadas:</div>
-              <div class="biblioteca-cats-select" id="biblioteca-pending-cats">
-                <button class="biblioteca-cat-btn active" data-cat="promos">Promos</button>
-                <button class="biblioteca-cat-btn" data-cat="objeciones">Objeciones</button>
-                <button class="biblioteca-cat-btn" data-cat="productos">Productos</button>
-                <button class="biblioteca-cat-btn" data-cat="otros">Otros</button>
-              </div>
-              <div class="actions-row" style="margin-top:10px">
-                <button class="btn-primary btn-sm" id="btn-biblioteca-confirmar">Confirmar y subir</button>
-                <button class="btn-secondary btn-sm" id="btn-biblioteca-cancelar">Cancelar</button>
-              </div>
-            </div>
-
-            <!-- Galería -->
-            <div id="biblioteca-galeria" class="biblioteca-galeria">
-              <div class="isla-empty">
-                <p>No hay imágenes todavía.<br>Subí la primera.</p>
-              </div>
-            </div>
+    <!-- TAB: BIBLIOTECA -->
+    <div id="tab-biblioteca" class="tab-content hidden">
+      <div class="card isla-header-card">
+        <div class="isla-hero">
+          <div class="isla-hero-icon"></div>
+          <div><h2 class="isla-title">Biblioteca de Imágenes</h2><p class="isla-subtitle">Subí y compartí imágenes útiles con el equipo</p></div>
+        </div>
+      </div>
+      <div class="card">
+        <p class="biblioteca-desc">Arrastrá o seleccioná imágenes para subirlas. Todos los asesores pueden verlas y descargarlas.</p>
+        <div class="biblioteca-drop-zone" id="biblioteca-drop-zone">
+          <input type="file" id="biblioteca-file-input" accept="image/*" multiple style="display:none" />
+          <div class="biblioteca-drop-icon">+</div>
+          <p>Arrastrá imágenes acá o hacé click para seleccionar</p>
+          <button class="btn-secondary btn-sm" id="btn-biblioteca-upload">Seleccionar imágenes</button>
+        </div>
+        <div id="biblioteca-pending-wrap" class="hidden">
+          <div class="biblioteca-pending-label">Categoría para las imágenes seleccionadas:</div>
+          <div class="biblioteca-cats-select" id="biblioteca-pending-cats">
+            <button class="biblioteca-cat-btn active" data-cat="promos">Promos</button>
+            <button class="biblioteca-cat-btn" data-cat="objeciones">Objeciones</button>
+            <button class="biblioteca-cat-btn" data-cat="productos">Productos</button>
+            <button class="biblioteca-cat-btn" data-cat="otros">Otros</button>
           </div>
+          <div class="actions-row" style="margin-top:10px">
+            <button class="btn-primary btn-sm" id="btn-biblioteca-confirmar">Confirmar y subir</button>
+            <button class="btn-secondary btn-sm" id="btn-biblioteca-cancelar">Cancelar</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="biblioteca-cats" id="biblioteca-cats">
+          <button class="biblioteca-cat-btn active" data-cat="todos">Todas</button>
+          <button class="biblioteca-cat-btn" data-cat="promos">Promos</button>
+          <button class="biblioteca-cat-btn" data-cat="objeciones">Objeciones</button>
+          <button class="biblioteca-cat-btn" data-cat="productos">Productos</button>
+          <button class="biblioteca-cat-btn" data-cat="otros">Otros</button>
+        </div>
+        <div id="biblioteca-galeria" class="biblioteca-galeria">
+          <div class="isla-empty"><p>No hay imágenes todavía.<br>Subí la primera.</p></div>
         </div>
       </div>
     </div>
@@ -494,15 +375,10 @@
     <div id="tab-tutoriales" class="tab-content hidden">
       <div class="card isla-header-card">
         <div class="isla-hero">
-          <div class="isla-hero-icon tut-icon"></div>
-          <div>
-            <h2 class="isla-title">Tutoriales</h2>
-            <p class="isla-subtitle">Capacitaciones y guías en video para el equipo</p>
-          </div>
+          <div class="isla-hero-icon"></div>
+          <div><h2 class="isla-title">Tutoriales</h2><p class="isla-subtitle">Capacitaciones y guías en video para el equipo</p></div>
         </div>
       </div>
-
-      <!-- Secciones de tutoriales -->
       <div class="tut-secciones">
         <button class="tut-seccion-btn active" data-seccion="facturacion">Facturación</button>
         <button class="tut-seccion-btn" data-seccion="smarthome">Smarthome</button>
@@ -510,48 +386,26 @@
         <button class="tut-seccion-btn" data-seccion="prepago">Prepago</button>
         <button class="tut-seccion-btn" data-seccion="retencion">Retención</button>
       </div>
-
-      <!-- Sección: Facturación -->
       <div class="tut-seccion-content active" id="tut-facturacion">
         <div class="tut-grid" id="tut-grid-facturacion"></div>
-        <div class="tut-empty hidden" id="tut-empty-facturacion">
-          <p>Próximamente se agregarán videos de Facturación.</p>
-        </div>
+        <div class="tut-empty hidden" id="tut-empty-facturacion"><p>Próximamente se agregarán videos de Facturación.</p></div>
       </div>
-
-      <!-- Sección: Smarthome -->
       <div class="tut-seccion-content hidden" id="tut-smarthome">
         <div class="tut-grid" id="tut-grid-smarthome"></div>
-        <div class="tut-empty hidden" id="tut-empty-smarthome">
-          <p>Próximamente se agregarán videos de Smarthome.</p>
-        </div>
+        <div class="tut-empty hidden" id="tut-empty-smarthome"><p>Próximamente se agregarán videos de Smarthome.</p></div>
       </div>
-
-      <!-- Sección: Técnico -->
       <div class="tut-seccion-content hidden" id="tut-tecnico">
         <div class="tut-grid" id="tut-grid-tecnico"></div>
-        <div class="tut-empty hidden" id="tut-empty-tecnico">
-          <p>Próximamente se agregarán videos de Técnico.</p>
-        </div>
+        <div class="tut-empty hidden" id="tut-empty-tecnico"><p>Próximamente se agregarán videos de Técnico.</p></div>
       </div>
-
-      <!-- Sección: Prepago -->
       <div class="tut-seccion-content hidden" id="tut-prepago">
         <div class="tut-grid" id="tut-grid-prepago"></div>
-        <div class="tut-empty hidden" id="tut-empty-prepago">
-          <p>Próximamente se agregarán videos de Prepago.</p>
-        </div>
+        <div class="tut-empty hidden" id="tut-empty-prepago"><p>Próximamente se agregarán videos de Prepago.</p></div>
       </div>
-
-      <!-- Sección: Retención -->
       <div class="tut-seccion-content hidden" id="tut-retencion">
         <div class="tut-grid" id="tut-grid-retencion"></div>
-        <div class="tut-empty hidden" id="tut-empty-retencion">
-          <p>Próximamente se agregarán videos de Retención.</p>
-        </div>
+        <div class="tut-empty hidden" id="tut-empty-retencion"><p>Próximamente se agregarán videos de Retención.</p></div>
       </div>
-
-      <!-- Modal de video -->
       <div id="tut-modal" class="tut-modal hidden">
         <div class="tut-modal-overlay" id="tut-modal-overlay"></div>
         <div class="tut-modal-content">

@@ -111,6 +111,11 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     document.getElementById("tab-" + tab).classList.remove("hidden");
     if (tab === "isla-social")  cargarIslaFeed();
     if (tab === "mis-speeches") cargarMisSpeeches();
+    if (tab === "biblioteca")   setTimeout(cargarBiblioteca, 100);
+    if (tab === "tutoriales") {
+      const secActiva = document.querySelector(".tut-seccion-btn.active");
+      if (secActiva) renderTutoriales(secActiva.dataset.seccion);
+    }
   });
 });
 
@@ -152,70 +157,11 @@ document.querySelectorAll(".btn-ciclo").forEach(btn => {
 });
 
 // ═══════════════════════════════════════════════════════════
-//  DURACIÓN DE PROMOCIÓN
-// ═══════════════════════════════════════════════════════════
-const MESES_NOMBRES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-
-let _promoDuracion = null; // meses seleccionados
-
-function calcularPromoVencimiento() {
-  const desdeVal = document.getElementById("f-promo-desde").value;
-  if (!desdeVal || !_promoDuracion) {
-    document.getElementById("f-promo-hasta").value = "";
-    document.getElementById("promo-hint").textContent = "Seleccioná duración y fecha de inicio para calcular el vencimiento";
-    return;
-  }
-  const [y, m, d] = desdeVal.split("-").map(Number);
-  const desde = new Date(y, m - 1, d);
-  const hasta = new Date(y, m - 1 + _promoDuracion, d);
-  const diaH  = String(hasta.getDate()).padStart(2, "0");
-  const mesH  = MESES_NOMBRES[hasta.getMonth()];
-  const anioH = hasta.getFullYear();
-  const diaD  = String(desde.getDate()).padStart(2, "0");
-  const mesD  = MESES_NOMBRES[desde.getMonth()];
-  const anioD = desde.getFullYear();
-  document.getElementById("f-promo-hasta").value = `${diaH} de ${mesH} de ${anioH}`;
-  document.getElementById("promo-hint").textContent =
-    `Promo de ${_promoDuracion} mes${_promoDuracion > 1 ? "es" : ""}: del ${diaD} de ${mesD} de ${anioD} al ${diaH} de ${mesH} de ${anioH}`;
-  window._promoVencimiento = { desde: `${diaD}/${m < 10 ? "0"+m : m}/${anioD}`, hasta: `${diaH}/${hasta.getMonth()+1 < 10 ? "0"+(hasta.getMonth()+1) : hasta.getMonth()+1}/${anioH}`, meses: _promoDuracion };
-}
-
-// Hoy como default en fecha desde
-document.getElementById("f-promo-desde").valueAsDate = new Date();
-
-document.querySelectorAll(".btn-promo-dur").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".btn-promo-dur").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    const meses = btn.dataset.meses;
-    const otroWrap = document.getElementById("promo-otro-wrap");
-    if (meses === "otro") {
-      otroWrap.classList.remove("hidden");
-      _promoDuracion = null;
-    } else {
-      otroWrap.classList.add("hidden");
-      _promoDuracion = parseInt(meses);
-      calcularPromoVencimiento();
-    }
-  });
-});
-
-document.getElementById("f-promo-meses-custom").addEventListener("input", e => {
-  const val = parseInt(e.target.value);
-  if (val > 0) {
-    _promoDuracion = val;
-    calcularPromoVencimiento();
-  }
-});
-
-document.getElementById("f-promo-desde").addEventListener("change", calcularPromoVencimiento);
-
-// ═══════════════════════════════════════════════════════════
 //  SECCIONES: HOGAR / MÓVIL
 // ═══════════════════════════════════════════════════════════
 const secciones = {
-  hogar: [{ desc: "", lista: "", final: "", pct: "" }],
-  movil: [{ desc: "", lista: "", final: "", pct: "" }],
+  hogar: [{ desc: "", lista: "", final: "", pct: "", meses: "" }],
+  movil: [{ desc: "", lista: "", final: "", pct: "", meses: "" }],
 };
 
 function renderSeccion(sec) {
@@ -223,7 +169,7 @@ function renderSeccion(sec) {
   list.innerHTML = "";
   secciones[sec].forEach((c, i) => {
     const row  = document.createElement("div");
-    row.className = "concepto-row";
+    row.className = "concepto-row concepto-row-full";
     const lista = parseFloat(c.lista) || 0;
     const final = parseFloat(c.final) || 0;
     const pct   = parseFloat(c.pct)   || 0;
@@ -234,14 +180,50 @@ function renderSeccion(sec) {
     } else if (lista > 0) {
       finalCalc = lista - lista * pct / 100;
     }
+    const mesesOpts = ["3","6","12","otro"];
+    const mesesBtns = mesesOpts.map(m =>
+      `<button class="btn-promo-dur-inline ${c.meses === m ? 'active' : ''}" data-m="${m}">${m === "otro" ? "Otro" : m + "m"}</button>`
+    ).join("");
     row.innerHTML =
+      `<div class="concepto-main-row">` +
       `<input type="text" placeholder="Descripción" value="${c.desc}" data-sec="${sec}" data-i="${i}" data-k="desc" />` +
-      `<input type="number" placeholder="$ Precio final" value="${c.final || ''}" data-sec="${sec}" data-i="${i}" data-k="final" class="monto" title="Precio final (app contención)" />` +
+      `<input type="number" placeholder="$ Precio final" value="${c.final || ''}" data-sec="${sec}" data-i="${i}" data-k="final" class="monto" />` +
       `<input type="number" placeholder="%" value="${c.pct}" min="0" max="100" data-sec="${sec}" data-i="${i}" data-k="pct" class="monto" />` +
-      `<input type="number" placeholder="$ Lista" value="${c.lista || ''}" data-sec="${sec}" data-i="${i}" data-k="lista" class="monto lista-manual" title="Precio de lista (manual o auto-calculado)" />` +
+      `<input type="number" placeholder="$ Lista" value="${c.lista || ''}" data-sec="${sec}" data-i="${i}" data-k="lista" class="monto lista-manual" />` +
       `<span class="concepto-neto">${(listaCalc > 0 || finalCalc > 0) ? ARS(final > 0 && lista === 0 ? final : finalCalc) : "—"}</span>` +
-      `<button class="btn-remove-concepto" data-sec="${sec}" data-i="${i}" title="Eliminar">✕</button>`;
+      `<button class="btn-remove-concepto" data-sec="${sec}" data-i="${i}" title="Eliminar">✕</button>` +
+      `</div>` +
+      `<div class="concepto-promo-row">` +
+      `<span class="concepto-promo-label">Promo:</span>` +
+      `<div class="concepto-promo-btns">${mesesBtns}</div>` +
+      `<input type="number" placeholder="meses" class="concepto-promo-custom ${c.meses === 'otro' ? '' : 'hidden'}" value="${c.mesesCustom || ''}" min="1" max="60" data-sec="${sec}" data-i="${i}" />` +
+      `<span class="concepto-promo-hint">${c.meses && c.meses !== 'otro' ? c.meses + ' meses' : (c.meses === 'otro' && c.mesesCustom ? c.mesesCustom + ' meses' : '')}</span>` +
+      `</div>`;
     list.appendChild(row);
+
+    // Botones de duración por fila — deseleccionable
+    row.querySelectorAll(".btn-promo-dur-inline").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const m = btn.dataset.m;
+        const yaActivo = secciones[sec][i].meses === m;
+        // Deseleccionar si ya estaba activo
+        if (yaActivo) {
+          secciones[sec][i].meses = "";
+          secciones[sec][i].mesesCustom = "";
+        } else {
+          secciones[sec][i].meses = m;
+          if (m !== "otro") secciones[sec][i].mesesCustom = "";
+        }
+        renderSeccion(sec);
+      });
+    });
+
+    // Input "otro"
+    const customInput = row.querySelector(".concepto-promo-custom");
+    customInput.addEventListener("change", e => {
+      secciones[sec][i].mesesCustom = e.target.value;
+    });
+
     const inputFinal = row.querySelector('[data-k="final"]');
     const inputLista = row.querySelector('[data-k="lista"]');
     const inputPct   = row.querySelector('[data-k="pct"]');
@@ -256,10 +238,7 @@ function renderSeccion(sec) {
         secciones[sec][i].lista = autoLista.toFixed(2);
       } else if (l > 0) {
         inputLista.classList.remove("auto-filled");
-        if (f === 0) {
-          inputFinal.value = "";
-          secciones[sec][i].final = "";
-        }
+        if (f === 0) { inputFinal.value = ""; secciones[sec][i].final = ""; }
       }
       renderSeccion(sec);
     }
@@ -273,7 +252,7 @@ function renderSeccion(sec) {
       const s = e.target.dataset.sec;
       const i = +e.target.dataset.i;
       if (secciones[s].length > 1) { secciones[s].splice(i, 1); renderSeccion(s); }
-      else { secciones[s][0] = { desc:"", lista:"", final:"", pct:"" }; renderSeccion(s); }
+      else { secciones[s][0] = { desc:"", lista:"", final:"", pct:"", meses:"", mesesCustom:"" }; renderSeccion(s); }
     });
   });
 }
@@ -301,8 +280,13 @@ function renderAdicionales() {
     const pct   = parseFloat(a.pct)   || 0;
     const neto  = lista - lista * pct / 100;
     const row   = document.createElement("div");
-    row.className = "adicional-row";
+    row.className = "adicional-row adicional-row-full";
+    const mesesOpts = ["3","6","12","otro"];
+    const mesesBtns = mesesOpts.map(m =>
+      `<button class="btn-promo-dur-inline ${a.meses === m ? 'active' : ''}" data-m="${m}">${m === "otro" ? "Otro" : m + "m"}</button>`
+    ).join("");
     row.innerHTML =
+      `<div class="concepto-main-row">` +
       `<span class="adicional-nombre">` +
         (a.logo ? `<img src="${a.logo}" class="adicional-logo" alt="${a.nombre}" title="${a.nombre}" onerror="this.style.display='none'" />` : `<span class="adicional-logo-placeholder"></span>`) +
         `<input type="text" placeholder="Nombre" value="${a.nombre}" data-i="${i}" data-k="nombre" class="adicional-name-input" />` +
@@ -310,10 +294,32 @@ function renderAdicionales() {
       `<input type="number" placeholder="$ lista" value="${a.lista}" data-i="${i}" data-k="lista" class="monto" />` +
       `<input type="number" placeholder="%" value="${a.pct}" min="0" max="100" data-i="${i}" data-k="pct" class="monto" />` +
       `<span class="concepto-neto">${lista > 0 ? ARS(neto) : "—"}</span>` +
-      `<button class="btn-remove-concepto" data-i="${i}" title="Eliminar">✕</button>`;
+      `<button class="btn-remove-concepto" data-i="${i}" title="Eliminar">✕</button>` +
+      `</div>` +
+      `<div class="concepto-promo-row">` +
+      `<span class="concepto-promo-label">Promo:</span>` +
+      `<div class="concepto-promo-btns">${mesesBtns}</div>` +
+      `<input type="number" placeholder="meses" class="concepto-promo-custom ${a.meses === 'otro' ? '' : 'hidden'}" value="${a.mesesCustom || ''}" min="1" max="60" />` +
+      `<span class="concepto-promo-hint">${a.meses && a.meses !== 'otro' ? a.meses + ' meses' : (a.meses === 'otro' && a.mesesCustom ? a.mesesCustom + ' meses' : '')}</span>` +
+      `</div>`;
     list.appendChild(row);
+
+    // Botones duración — deseleccionable
+    row.querySelectorAll(".btn-promo-dur-inline").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const m = btn.dataset.m;
+        const yaActivo = adicionales[i].meses === m;
+        if (yaActivo) { adicionales[i].meses = ""; adicionales[i].mesesCustom = ""; }
+        else { adicionales[i].meses = m; if (m !== "otro") adicionales[i].mesesCustom = ""; }
+        renderAdicionales();
+      });
+    });
+
+    row.querySelector(".concepto-promo-custom").addEventListener("change", e => {
+      adicionales[i].mesesCustom = e.target.value;
+    });
   });
-  list.querySelectorAll("input").forEach(inp => {
+  list.querySelectorAll("input[data-k]").forEach(inp => {
     inp.addEventListener("change", e => {
       const i = +e.target.dataset.i;
       const k = e.target.dataset.k;
@@ -400,9 +406,6 @@ document.getElementById("btn-generar").addEventListener("click", () => {
     mora:        g("f-mora"),
     iva:         g("f-iva") || "21",
     descuentoCT: g("f-descuento-ct"),
-    promoMeses:  window._promoVencimiento ? window._promoVencimiento.meses : null,
-    promoDesde:  window._promoVencimiento ? window._promoVencimiento.desde : null,
-    promoHasta:  window._promoVencimiento ? window._promoVencimiento.hasta : null,
   };
   if (!data.nombre) { showToast("Ingresá el nombre del cliente", "error"); return; }
   const { precioLista, totalDescuentos, descuentoCT, subtotal, credito, mora, ivaAmt, ivaRate, total, hogar, movil, adicionalesLista, adicionalesDesc } = calcularFactura(data);
@@ -414,8 +417,9 @@ document.getElementById("btn-generar").addEventListener("click", () => {
       const p = parseFloat(c.pct)   || 0;
       const d = l * p / 100;
       const n = l - d;
+      const mesesLabel = c.meses && c.meses !== "otro" ? c.meses + " meses" : (c.meses === "otro" && c.mesesCustom ? c.mesesCustom + " meses" : "");
       return `<tr>
-        <td>${c.desc || "—"}</td>
+        <td>${c.desc || "—"}${mesesLabel ? `<span class="inv-promo-tag">${mesesLabel}</span>` : ""}</td>
         <td class="lista-col">${ARS(l)}</td>
         <td class="pct-col">${p > 0 ? p + "%" : "—"}</td>
         <td class="desc-col">${d > 0 ? '<span class=\"desc-badge\">−' + ARS(d) + '</span>' : '<span class=\"desc-empty\">—</span>'}</td>
@@ -429,8 +433,9 @@ document.getElementById("btn-generar").addEventListener("click", () => {
     const p = parseFloat(a.pct)   || 0;
     const d = l * p / 100;
     const n = l - d;
+    const mesesLabel = a.meses && a.meses !== "otro" ? a.meses + " meses" : (a.meses === "otro" && a.mesesCustom ? a.mesesCustom + " meses" : "");
     return `<tr>
-      <td>${a.nombre || "Adicional"}</td>
+      <td>${a.nombre || "Adicional"}${mesesLabel ? `<span class="inv-promo-tag">${mesesLabel}</span>` : ""}</td>
       <td class="lista-col">${ARS(l)}</td>
       <td class="pct-col">${p > 0 ? p + "%" : "—"}</td>
       <td class="desc-col">${d > 0 ? '<span class=\"desc-badge\">−' + ARS(d) + '</span>' : '<span class=\"desc-empty\">—</span>'}</td>
@@ -460,7 +465,6 @@ document.getElementById("btn-generar").addEventListener("click", () => {
           <div class="inv-meta-row"><span>Período</span><strong>${data.periodo || "—"}</strong></div>
           <div class="inv-meta-row"><span>Emisión</span><strong>${fechaStr(data.fecha)}</strong></div>
           <div class="inv-meta-row venc"><span>Vencimiento</span><strong>${fechaStr(data.vencimiento)}</strong></div>
-          ${data.promoMeses ? `<div class="inv-meta-row inv-promo-row"><span>Promo (${data.promoMeses} mes${data.promoMeses > 1 ? "es" : ""})</span><strong>${data.promoDesde} → ${data.promoHasta}</strong></div>` : ""}
         </div>
       </div>
       <table class="inv-table">
@@ -1108,7 +1112,10 @@ function renderSpeechCard(id, data, currentUser, container, tipo = "isla") {
       ${tipo === "mis" ? `<button class="btn-mis-delete" data-id="${id}" title="Eliminar">🗑️</button>` : ""}
     </div>
     <h3 class="isla-card-titulo">${data.titulo || "Sin título"}</h3>
-    <p class="isla-card-contenido">${(data.contenido || "").replace(/\n/g, "<br>")}</p>
+    <div class="isla-card-contenido-wrap">
+      <p class="isla-card-contenido isla-card-contenido-short">${(data.contenido || "").replace(/\n/g, "<br>")}</p>
+      <button class="btn-ver-mas">Ver más</button>
+    </div>
     <div class="isla-card-footer">
       <div class="isla-rating">
         ${renderEstrellas(promedio, totalVotos)}
@@ -1127,6 +1134,13 @@ function renderSpeechCard(id, data, currentUser, container, tipo = "isla") {
       </div>
     </div>
   `;
+
+  // Ver más / Ver menos
+  card.querySelector(".btn-ver-mas").addEventListener("click", () => {
+    const contenidoEl = card.querySelector(".isla-card-contenido");
+    const expandido   = contenidoEl.classList.toggle("isla-card-contenido-full");
+    card.querySelector(".btn-ver-mas").textContent = expandido ? "Ver menos" : "Ver más";
+  });
 
   // Votar estrellas
   if (tipo === "isla" && currentUser && !esMio) {
@@ -1299,23 +1313,19 @@ function cargarMisSpeeches() {
 }
 
 // ═══════════════════════════════════════════════════════════
-//  BIBLIOTECA DE IMÁGENES — Firebase Storage
+//  BIBLIOTECA DE IMÁGENES — Cloudinary + Firebase DB
 // ═══════════════════════════════════════════════════════════
-import { getStorage, ref as sRef, uploadBytes, getDownloadURL, listAll, deleteObject }
-  from "https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js";
+const CLOUDINARY_CLOUD  = "dlshycchv";
+const CLOUDINARY_PRESET = "Go Bill";
 
-const storage = getStorage(app);
-
-let _pendingFiles    = [];
+let _pendingFiles        = [];
 let _bibliotecaCatFiltro = "todos";
-let _pendingCat      = "promos";
+let _pendingCat          = "promos";
 
-// — Botón seleccionar archivos
 document.getElementById("btn-biblioteca-upload").addEventListener("click", () => {
   document.getElementById("biblioteca-file-input").click();
 });
 
-// — Drop zone
 const dropZone = document.getElementById("biblioteca-drop-zone");
 dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("drag-over"); });
 dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
@@ -1337,7 +1347,6 @@ function iniciarSubida(files) {
   document.getElementById("biblioteca-pending-wrap").classList.remove("hidden");
 }
 
-// Categoria pending
 document.querySelectorAll("#biblioteca-pending-cats .biblioteca-cat-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll("#biblioteca-pending-cats .biblioteca-cat-btn").forEach(b => b.classList.remove("active"));
@@ -1352,22 +1361,41 @@ document.getElementById("btn-biblioteca-cancelar").addEventListener("click", () 
 });
 
 document.getElementById("btn-biblioteca-confirmar").addEventListener("click", async () => {
-  const user = auth.currentUser;
-  if (!user) { showToast("Tenés que estar logueado", "error"); return; }
   if (!_pendingFiles.length) return;
+  const user = auth.currentUser;
+  const btn  = document.getElementById("btn-biblioteca-confirmar");
+  btn.disabled = true;
   showToast("Subiendo imágenes...", "");
-  for (const file of _pendingFiles) {
-    const path    = `biblioteca/${_pendingCat}/${Date.now()}_${file.name}`;
-    const fileRef = sRef(storage, path);
-    await uploadBytes(fileRef, file, { customMetadata: { uid: user.uid, cat: _pendingCat, nombre: user.email.split("@")[0] } });
+  try {
+    for (const file of _pendingFiles) {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("upload_preset", CLOUDINARY_PRESET);
+      fd.append("folder", `Biblioteca/${_pendingCat}`);
+      fd.append("tags", _pendingCat);
+      const res  = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method: "POST", body: fd });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error.message);
+      await push(ref(db, "biblioteca"), {
+        url:       json.secure_url,
+        public_id: json.public_id,
+        cat:       _pendingCat,
+        nombre:    user ? user.email.split("@")[0] : "Anónimo",
+        uid:       user ? user.uid : "",
+        timestamp: Date.now(),
+      });
+    }
+    _pendingFiles = [];
+    document.getElementById("biblioteca-pending-wrap").classList.add("hidden");
+    showToast("Imágenes subidas correctamente", "success");
+    cargarBiblioteca();
+  } catch(e) {
+    showToast("Error al subir: " + e.message, "error");
+  } finally {
+    btn.disabled = false;
   }
-  _pendingFiles = [];
-  document.getElementById("biblioteca-pending-wrap").classList.add("hidden");
-  showToast("Imágenes subidas correctamente", "success");
-  cargarBiblioteca();
 });
 
-// — Filtros de categoría
 document.querySelectorAll("#biblioteca-cats .biblioteca-cat-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll("#biblioteca-cats .biblioteca-cat-btn").forEach(b => b.classList.remove("active"));
@@ -1377,45 +1405,39 @@ document.querySelectorAll("#biblioteca-cats .biblioteca-cat-btn").forEach(btn =>
   });
 });
 
-// — Cargar galería
-async function cargarBiblioteca() {
+function cargarBiblioteca() {
   const galeria = document.getElementById("biblioteca-galeria");
+  if (!galeria) return;
   galeria.innerHTML = "<div class='isla-loading'>Cargando...</div>";
-  try {
-    const cats = _bibliotecaCatFiltro === "todos"
-      ? ["promos", "objeciones", "productos", "otros"]
-      : [_bibliotecaCatFiltro];
-    const user = auth.currentUser;
-    let items = [];
-    for (const cat of cats) {
-      const listRef  = sRef(storage, `biblioteca/${cat}`);
-      const result   = await listAll(listRef);
-      for (const item of result.items) {
-        const url = await getDownloadURL(item);
-        items.push({ ref: item, url, cat, name: item.name });
-      }
-    }
+  onValue(ref(db, "biblioteca"), (snapshot) => {
     galeria.innerHTML = "";
+    const data = snapshot.val() || {};
+    let items = Object.entries(data)
+      .sort(([, a], [, b]) => (b.timestamp || 0) - (a.timestamp || 0));
+    if (_bibliotecaCatFiltro !== "todos") {
+      items = items.filter(([, v]) => v.cat === _bibliotecaCatFiltro);
+    }
     if (!items.length) {
       galeria.innerHTML = "<div class='isla-empty'><p>No hay imágenes todavía.<br>Subí la primera.</p></div>";
       return;
     }
-    items.forEach(({ ref: imgRef, url, cat, name }) => {
+    items.forEach(([id, item]) => {
       const el = document.createElement("div");
       el.className = "biblioteca-item";
       el.innerHTML = `
-        <img src="${url}" alt="${name}" loading="lazy" />
+        <img src="${item.url}" alt="${item.cat}" loading="lazy" />
         <div class="biblioteca-item-bar">
-          <span class="biblioteca-item-cat">${cat}</span>
+          <span class="biblioteca-item-cat">${item.cat}</span>
           <div class="biblioteca-item-actions">
-            <button class="btn-bib-copiar" title="Copiar imagen">Copiar</button>
-            <button class="btn-bib-descargar" title="Descargar">Descargar</button>
+            <button class="btn-bib-copiar">Copiar</button>
+            <button class="btn-bib-descargar">Descargar</button>
           </div>
         </div>
       `;
+      el.querySelector("img").addEventListener("click", () => window.open(item.url, "_blank"));
       el.querySelector(".btn-bib-copiar").addEventListener("click", async () => {
         try {
-          const resp = await fetch(url);
+          const resp = await fetch(item.url);
           const blob = await resp.blob();
           await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
           showToast("Imagen copiada", "success");
@@ -1423,51 +1445,31 @@ async function cargarBiblioteca() {
       });
       el.querySelector(".btn-bib-descargar").addEventListener("click", () => {
         const a = document.createElement("a");
-        a.href = url;
-        a.download = name;
-        a.target = "_blank";
-        a.click();
-      });
-      el.querySelector("img").addEventListener("click", () => {
-        window.open(url, "_blank");
+        a.href = item.url; a.download = item.cat + ".jpg"; a.target = "_blank"; a.click();
       });
       galeria.appendChild(el);
     });
-  } catch (e) {
-    galeria.innerHTML = "<div class='isla-empty'><p>Error al cargar la biblioteca.</p></div>";
-  }
+  });
 }
-
-// Cargar biblioteca cuando se entra a Mis Speeches
-document.querySelectorAll(".tab-btn").forEach(btn => {
-  if (btn.dataset.tab === "mis-speeches") {
-    btn.addEventListener("click", () => { setTimeout(cargarBiblioteca, 100); });
-  }
-});
 
 // ═══════════════════════════════════════════════════════════
 //  TUTORIALES
 // ═══════════════════════════════════════════════════════════
-
-// Configuración de videos por sección
-// Para agregar un video, añadí un objeto a la sección correspondiente:
-// { titulo, descripcion, src } — src es la ruta relativa desde la raíz del repo
 const TUTORIALES = {
   facturacion: [
-    // Ejemplo:
-    // { titulo: "Cómo leer una factura", descripcion: "Explicación detallada de cada ítem de la factura.", src: "assets/tutoriales/facturacion/leer-factura.mp4" },
+    { titulo: "Facturación General", descripcion: "Todo lo que necesitás saber sobre la factura de Personal.", src: "assets/tutoriales/facturacion/facturacion-general.mp4" },
   ],
   smarthome: [
-    // { titulo: "Instalación de dispositivo", descripcion: "Paso a paso para instalar un dispositivo Smarthome.", src: "assets/tutoriales/smarthome/instalacion.mp4" },
+    { titulo: "Smarthome General", descripcion: "Introducción a los productos y servicios Smarthome.", src: "assets/tutoriales/smarthome/smarthome-general.mp4" },
   ],
   tecnico: [
-    // { titulo: "Diagnóstico de señal", descripcion: "Cómo diagnosticar problemas de señal.", src: "assets/tutoriales/tecnico/diagnostico-senal.mp4" },
+    { titulo: "Técnico General", descripcion: "Diagnóstico y resolución de problemas técnicos.", src: "assets/tutoriales/tecnico/tecnico-general.mp4" },
   ],
   prepago: [
-    // { titulo: "Carga de crédito", descripcion: "Cómo cargar crédito en una línea prepago.", src: "assets/tutoriales/prepago/carga-credito.mp4" },
+    { titulo: "Prepago General", descripcion: "Gestión de líneas y recargas prepago.", src: "assets/tutoriales/prepago/prepago-general.mp4" },
   ],
   retencion: [
-    // { titulo: "Técnicas de retención", descripcion: "Estrategias clave para retener clientes.", src: "assets/tutoriales/retencion/tecnicas.mp4" },
+    { titulo: "Retención General", descripcion: "Estrategias y técnicas de retención de clientes.", src: "assets/tutoriales/retencion/retencion-general.mp4" },
   ],
 };
 
@@ -1477,12 +1479,9 @@ function renderTutoriales(seccion) {
   if (!grid) return;
   grid.innerHTML = "";
   const videos = TUTORIALES[seccion] || [];
-  if (!videos.length) {
-    empty.classList.remove("hidden");
-    return;
-  }
-  empty.classList.add("hidden");
-  videos.forEach((vid, i) => {
+  if (!videos.length) { if (empty) empty.classList.remove("hidden"); return; }
+  if (empty) empty.classList.add("hidden");
+  videos.forEach(vid => {
     const card = document.createElement("div");
     card.className = "tut-card";
     card.innerHTML = `
@@ -1512,8 +1511,7 @@ function abrirTutModal(vid) {
 
 function cerrarTutModal() {
   const video = document.getElementById("tut-modal-video");
-  video.pause();
-  video.src = "";
+  video.pause(); video.src = "";
   document.getElementById("tut-modal").classList.add("hidden");
   document.body.style.overflow = "";
 }
@@ -1521,7 +1519,6 @@ function cerrarTutModal() {
 document.getElementById("tut-modal-close").addEventListener("click", cerrarTutModal);
 document.getElementById("tut-modal-overlay").addEventListener("click", cerrarTutModal);
 
-// Tabs de secciones tutoriales
 document.querySelectorAll(".tut-seccion-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".tut-seccion-btn").forEach(b => b.classList.remove("active"));
@@ -1533,23 +1530,4 @@ document.querySelectorAll(".tut-seccion-btn").forEach(btn => {
   });
 });
 
-// Render inicial
 renderTutoriales("facturacion");
-
-// Render al entrar al tab
-document.querySelectorAll(".tab-btn").forEach(btn => {
-  if (btn.dataset.tab === "tutoriales") {
-    btn.addEventListener("click", () => {
-      const secActiva = document.querySelector(".tut-seccion-btn.active");
-      if (secActiva) renderTutoriales(secActiva.dataset.seccion);
-    });
-  }
-});
-
-// Tab switch para tutoriales tab
-document.querySelectorAll(".tab-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const tab = btn.dataset.tab;
-    if (tab === "tutoriales") renderTutoriales("facturacion");
-  });
-});
